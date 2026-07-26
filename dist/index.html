@@ -553,6 +553,303 @@ button {
   accent-color: #1c6ec4;
 }
 
+/* --- Challenge 1: fire ----------------------------------------------------
+   SPEC section 6 row 1. A 5x5 grid that stays square at every width, so it
+   still reads as a grid of photos on a 390px phone. */
+
+.fire-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.fire-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Square cells without a fixed pixel size: the grid shrinks, it never wraps. */
+  aspect-ratio: 1;
+  font-size: clamp(1.1rem, 5.4vw, 1.7rem);
+  line-height: 1;
+  background: #f7f9fb;
+  border: 1px solid #d9dfe5;
+  border-radius: 4px;
+  transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.fire-tile:hover {
+  background: #eaf2fb;
+}
+
+.fire-tile-selected {
+  background: #d8ebff;
+  border-color: #1c6ec4;
+  box-shadow: inset 0 0 0 2px #1c6ec4;
+}
+
+.fire-tile:focus-visible {
+  outline: 2px solid #1c6ec4;
+  outline-offset: 1px;
+}
+
+/* A brief flash on the two tiles that just traded places, so the swap reads as
+   deliberate rather than as a rendering fault. */
+.fire-tile-swapped {
+  animation: fire-swap 0.28s ease-out;
+}
+
+@keyframes fire-swap {
+  0% {
+    scale: 0.72;
+    filter: brightness(1.5);
+  }
+  100% {
+    scale: 1;
+    filter: none;
+  }
+}
+
+/* --- Challenges 2 and 4: blurred thumbnails -------------------------------
+   SPEC section 6 rows 2 and 4, and section 8: layered radial-gradients under a
+   blur, no image files anywhere. */
+
+.blob-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.blob-tile {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  padding: 0;
+  background: #dfe5ea;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.blob-tile:focus-visible {
+  outline: 2px solid #1c6ec4;
+  outline-offset: 1px;
+}
+
+/* The blur lives on the inner canvas, never on the tile, so the selection ring
+   and the tick stay crisp. */
+.blob-blurred .blob-canvas {
+  filter: blur(6px) saturate(1.6);
+}
+
+.blob-canvas {
+  position: absolute;
+  /* Overdrawn so the blur has material past the edges and does not vignette. */
+  inset: -14%;
+  display: block;
+  background:
+    radial-gradient(120% 70% at 50% 108%, hsl(var(--blob-hue) 34% 42%) 0%, transparent 62%),
+    radial-gradient(90% 60% at 20% 6%, hsl(var(--blob-hue-b) 62% 78%) 0%, transparent 70%),
+    linear-gradient(178deg, hsl(var(--blob-hue-b) 48% 82%) 0%, hsl(var(--blob-hue) 30% 58%) 100%);
+}
+
+.blob-canvas::before,
+.blob-canvas::after {
+  content: "";
+  position: absolute;
+}
+
+/* The almost-a-car: a low wide mass with two dark round shapes tucked under it.
+   Squint and it is a hatchback in bad light. */
+.blob-canvas[data-blob="pod"]::before {
+  left: calc(20% + var(--blob-shift));
+  right: calc(18% - var(--blob-shift));
+  bottom: 28%;
+  height: 26%;
+  background: hsl(var(--blob-hue) 44% 34%);
+  border-radius: 42% 46% 18% 18% / 78% 82% 22% 22%;
+}
+
+/* Two dark round shapes under the mass. Drawn as one band with two ellipse
+   gradients rather than two nodes, since a tile only gets two pseudo-elements. */
+.blob-canvas[data-blob="pod"]::after {
+  left: calc(22% + var(--blob-shift));
+  right: calc(20% - var(--blob-shift));
+  bottom: 18%;
+  height: 15%;
+  background:
+    radial-gradient(ellipse 15% 48% at 20% 45%, hsl(var(--blob-hue) 34% 16%) 0 99%, transparent 100%),
+    radial-gradient(ellipse 15% 48% at 80% 45%, hsl(var(--blob-hue) 34% 16%) 0 99%, transparent 100%);
+}
+
+.blob-canvas[data-blob="plume"]::before {
+  left: calc(34% + var(--blob-shift));
+  bottom: 24%;
+  width: 32%;
+  height: 52%;
+  background: hsl(var(--blob-hue) 40% 36%);
+  border-radius: 50% 50% 40% 40% / 62% 62% 30% 30%;
+}
+
+.blob-canvas[data-blob="tower"]::before {
+  left: calc(42% + var(--blob-shift));
+  bottom: 20%;
+  width: 16%;
+  height: 62%;
+  background: hsl(var(--blob-hue) 38% 32%);
+  border-radius: 30% 30% 8% 8%;
+}
+
+.blob-canvas[data-blob="dunes"]::before {
+  left: -10%;
+  right: -10%;
+  bottom: 22%;
+  height: 30%;
+  background: hsl(var(--blob-hue) 42% 44%);
+  border-radius: 60% 40% 0 0 / 90% 70% 0 0;
+}
+
+.blob-canvas[data-blob="orb"]::before {
+  left: calc(33% + var(--blob-shift));
+  top: 30%;
+  width: 34%;
+  aspect-ratio: 1;
+  background: hsl(var(--blob-hue) 46% 40%);
+  border-radius: 50%;
+}
+
+.blob-canvas[data-blob="crest"]::before {
+  left: calc(16% + var(--blob-shift));
+  bottom: 26%;
+  width: 68%;
+  height: 34%;
+  background: hsl(var(--blob-hue) 40% 38%);
+  border-radius: 50% 8% 40% 12% / 80% 20% 40% 30%;
+}
+
+.blob-canvas[data-blob="ridge"]::before {
+  left: calc(10% + var(--blob-shift));
+  bottom: 24%;
+  width: 80%;
+  height: 40%;
+  background: hsl(var(--blob-hue) 36% 40%);
+  clip-path: polygon(0% 100%, 22% 26%, 44% 74%, 68% 12%, 100% 100%);
+}
+
+/* The subject in the robot grid. Blurred less than the background so it is
+   just legible: legible enough to be sure none of them is a robot. */
+.blob-subject {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.6rem, 8vw, 2.6rem);
+  opacity: 0.7;
+  filter: blur(2.1px) saturate(1.2);
+}
+
+.blob-check {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  background: #1c6ec4;
+  border-radius: 50%;
+  opacity: 0;
+  scale: 0.5;
+  transition: opacity 0.12s ease, scale 0.12s ease;
+}
+
+.blob-check::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 4px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
+}
+
+.blob-tile-selected {
+  box-shadow: inset 0 0 0 3px #1c6ec4;
+}
+
+.blob-tile-selected .blob-canvas {
+  scale: 0.9;
+}
+
+.blob-tile-selected .blob-check {
+  opacity: 1;
+  scale: 1;
+}
+
+/* --- Challenge 3: math ----------------------------------------------------
+   SPEC section 6 row 3. Played straight: the sum is friendly, the buttons are
+   sweet, and the answers are nonsense. */
+
+.math-panel {
+  display: grid;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.math-prompt {
+  margin: 0;
+  font-size: clamp(2rem, 11vw, 2.9rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: #26313d;
+}
+
+.math-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.math-option {
+  padding: 14px 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4a3350;
+  background: var(--candy-sky);
+  border: 1px solid #b4d6ef;
+  border-radius: 12px;
+  transition: translate 0.12s ease, filter 0.12s ease;
+}
+
+.math-option:nth-child(2) {
+  background: var(--candy-lavender);
+  border-color: #c0a8ee;
+}
+
+.math-option:nth-child(3) {
+  background: var(--candy-lemon);
+  border-color: #e8d783;
+}
+
+.math-option:nth-child(4) {
+  background: var(--candy-mint);
+  border-color: #85d8bb;
+}
+
+.math-option:hover {
+  translate: 0 -2px;
+  filter: brightness(1.04);
+}
+
+.math-option-selected {
+  box-shadow: inset 0 0 0 3px #1c6ec4;
+}
+
+.math-option:focus-visible {
+  outline: 2px solid #1c6ec4;
+  outline-offset: 2px;
+}
+
 /* --- Chaos overrides ------------------------------------------------------
    The widget is the last thing on the page still pretending to be serious, so
    it loses its composure a level later than everything else. */
@@ -626,13 +923,31 @@ body.fx-neon .captcha-skip {
   .captcha-meta {
     font-size: 0.54rem;
   }
+
+  /* The grids keep their shape at 390px: the 5x5 stays square and shrinks, the
+     3x3 stays three wide. Only the gaps and the body padding give way. */
+  .captcha-body {
+    padding: 8px;
+  }
+
+  .fire-grid,
+  .blob-grid {
+    gap: 4px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .captcha-card,
   .captcha-error:not(:empty),
+  .fire-tile-swapped,
   body.fx-dodge .captcha-skip {
     animation: none;
+  }
+
+  /* Belt and braces: the swap is already withheld by the chaos flag, and the
+     hover lift goes too. */
+  .math-option:hover {
+    translate: none;
   }
 
   .captcha-skip {
@@ -2772,21 +3087,383 @@ const __default_scripts_captchas_stub_js = {
   }
 };
 
+// scripts/captchas/shuffle.js
+// Deterministic shuffling for the selection challenges. SPEC.md section 6.
+//
+// The grids have to look freshly generated for every level without being
+// genuinely random: a fixed seed keeps a level's layout stable across the
+// re-render that follows each rejection, so the board does not reshuffle
+// itself out from under the visitor mid-attempt.
+
+// Lehmer generator. Small, pure, and good enough for arranging emoji.
+function captchaShuffle(items, seed) {
+  const out = [...items];
+  let state = ((Math.trunc(seed) || 1) * 7919) % 2147483647 || 7919;
+
+  const next = () => {
+    state = (state * 48271) % 2147483647;
+    return state / 2147483647;
+  };
+
+  for (let index = out.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(next() * (index + 1));
+    const held = out[index];
+    out[index] = out[swap];
+    out[swap] = held;
+  }
+
+  return out;
+}
+
+// scripts/captchas/fire.js
+// CAPTCHA 1: fire. SPEC.md section 6, row 1.
+//
+// A 5x5 grid of weather and water emoji with a handful of real fires in it.
+// The grid is honestly solvable looking: the fires are unmistakable, there are
+// always exactly five of them, and selecting them all is the obvious move. It
+// is also, of course, rejected.
+//
+// From level 5 the tiles start swapping under the pointer, so the fire you were
+// about to click is somewhere else by the time you get there.
+
+
+// The six from the spec and nothing else.
+const FIRE_SET = {
+  fire: '\u{1F525}',
+  droplet: '\u{1F4A7}',
+  ice: '\u{1F9CA}',
+  wave: '\u{1F30A}',
+  snow: '❄️',
+  candle: '\u{1F56F}️'
+};
+
+// 25 tiles: five fires, four of everything else. Fixed counts, shuffled layout,
+// so every level looks new and every level looks winnable.
+const FIRE_POOL = [
+  ...Array(5).fill(FIRE_SET.fire),
+  ...Array(4).fill(FIRE_SET.droplet),
+  ...Array(4).fill(FIRE_SET.ice),
+  ...Array(4).fill(FIRE_SET.wave),
+  ...Array(4).fill(FIRE_SET.snow),
+  ...Array(4).fill(FIRE_SET.candle)
+];
+
+// The level from which tiles start running away. SPEC section 6, row 1.
+const FIRE_SWAP_LEVEL = 5;
+
+// Motion is gated on a chaos flag rather than the level alone. `fx-shake` is a
+// MOTION_FLAG, so it is withheld under prefers-reduced-motion and those
+// visitors get a completely static grid.
+function fireSwapsAllowed(level) {
+  const body = document.body;
+  return level >= FIRE_SWAP_LEVEL && Boolean(body) && body.classList.contains('fx-shake');
+}
+
+function fireTile(emoji, index) {
+  const tile = document.createElement('button');
+  tile.type = 'button';
+  tile.className = 'fire-tile';
+  tile.dataset.index = String(index);
+  tile.setAttribute('aria-pressed', 'false');
+  tile.textContent = emoji;
+  return tile;
+}
+
+const fireSelect = (tile) => {
+  const selected = tile.classList.toggle('fire-tile-selected');
+  tile.setAttribute('aria-pressed', String(selected));
+};
+
+// A swap trades contents with a neighbour a couple of squares away, which reads
+// as the grid rearranging itself rather than one tile glitching.
+function fireSwap(tiles, tile) {
+  const from = tiles.indexOf(tile);
+  const to = (from + 7 + (Date.now() % 5)) % tiles.length;
+  if (to === from) return;
+
+  const other = tiles[to];
+  const heldText = other.textContent;
+  const heldSelected = other.classList.contains('fire-tile-selected');
+
+  other.textContent = tile.textContent;
+  other.classList.toggle('fire-tile-selected', tile.classList.contains('fire-tile-selected'));
+  other.setAttribute('aria-pressed', String(other.classList.contains('fire-tile-selected')));
+
+  tile.textContent = heldText;
+  tile.classList.toggle('fire-tile-selected', heldSelected);
+  tile.setAttribute('aria-pressed', String(heldSelected));
+
+  tile.classList.remove('fire-tile-swapped');
+  other.classList.remove('fire-tile-swapped');
+  // Forced reflow so the flash animation restarts on a tile that just ran.
+  void tile.offsetWidth;
+  tile.classList.add('fire-tile-swapped');
+  other.classList.add('fire-tile-swapped');
+}
+
+const __default_scripts_captchas_fire_js = {
+  id: 'fire',
+  title: 'Security Verification',
+  instruction: 'Click all the fire emojis.',
+
+  render(root, ctx) {
+    const grid = document.createElement('div');
+    grid.className = 'fire-grid';
+
+    const layout = captchaShuffle(FIRE_POOL, ctx.level * 31 + 7);
+    const tiles = layout.map((emoji, index) => fireTile(emoji, index));
+    const swapping = fireSwapsAllowed(ctx.level);
+
+    tiles.forEach((tile) => {
+      tile.addEventListener('click', () => fireSelect(tile));
+      if (swapping) tile.addEventListener('mouseenter', () => fireSwap(tiles, tile));
+    });
+
+    grid.append(...tiles);
+    root.append(grid);
+
+    // Element listeners die with the grid, but the shell owns teardown and the
+    // registry is the one place that is allowed to know that.
+    ctx.cleanup(() => grid.replaceChildren());
+  },
+
+  // Always false. There is no correct set of tiles.
+  verify() {
+    return false;
+  }
+};
+
+// scripts/captchas/blobs.js
+// Shared blurry "photo" grid for the two image challenges. SPEC.md section 6,
+// rows 2 and 4, and section 8: everything is CSS, canvas or emoji, so the
+// photos are layered radial-gradients under a blur.
+//
+// The trick is that the shapes are not noise. Each tile is a plausible badly
+// compressed thumbnail of *something*, and a few of them are very nearly a car
+// seen from the side. Long enough staring and you will convince yourself.
+
+
+// Shape recipes are drawn in captcha.css off `data-blob`. The names are
+// deliberately non-committal: nothing in the DOM ever claims to be a subject.
+const BLOB_SHAPES = ['pod', 'pod', 'pod', 'plume', 'tower', 'dunes', 'orb', 'crest', 'ridge'];
+
+// Scenery for the robot grid, where the emoji carries the subject instead.
+const BLOB_SCENERY = ['dunes', 'plume', 'ridge', 'orb', 'crest', 'tower', 'dunes', 'ridge', 'plume'];
+
+function blobTile(shape, index, seed, subject) {
+  const tile = document.createElement('button');
+  tile.type = 'button';
+  tile.className = 'blob-tile blob-blurred';
+  tile.dataset.index = String(index);
+  tile.setAttribute('aria-pressed', 'false');
+  tile.setAttribute('aria-label', `Image ${index + 1}`);
+
+  const canvas = document.createElement('span');
+  canvas.className = 'blob-canvas';
+  canvas.dataset.blob = shape;
+  canvas.setAttribute('aria-hidden', 'true');
+  canvas.style.setProperty('--blob-hue', String((index * 47 + seed * 19) % 360));
+  canvas.style.setProperty('--blob-hue-b', String((index * 83 + seed * 31 + 40) % 360));
+  canvas.style.setProperty('--blob-shift', `${((index * 13) % 24) - 12}%`);
+
+  tile.append(canvas);
+
+  if (subject) {
+    const figure = document.createElement('span');
+    figure.className = 'blob-subject';
+    figure.setAttribute('aria-hidden', 'true');
+    figure.textContent = subject;
+    tile.append(figure);
+  }
+
+  const tick = document.createElement('span');
+  tick.className = 'blob-check';
+  tick.setAttribute('aria-hidden', 'true');
+  tile.append(tick);
+
+  tile.addEventListener('click', () => {
+    const selected = tile.classList.toggle('blob-tile-selected');
+    tile.setAttribute('aria-pressed', String(selected));
+  });
+
+  return tile;
+}
+
+// A 3x3 of blurred thumbnails. `subjects` is an optional list of emoji laid
+// over the blobs, one per tile.
+function blobGrid({ seed, shapes, subjects = null }) {
+  const grid = document.createElement('div');
+  grid.className = 'blob-grid';
+
+  const order = captchaShuffle(shapes, seed);
+  const figures = subjects ? captchaShuffle(subjects, seed + 13) : null;
+
+  order.forEach((shape, index) => {
+    grid.append(blobTile(shape, index, seed, figures ? figures[index] : null));
+  });
+
+  return grid;
+}
+
+// scripts/captchas/images.js
+// CAPTCHA 2: images. SPEC.md section 6, row 2.
+//
+// Nine blurred thumbnails, three of which are a low wide mass with two dark
+// round shapes under it. That is a car. It is obviously a car. Select them.
+
+
+const __default_scripts_captchas_images_js = {
+  id: 'images',
+  title: 'Image Verification',
+  instruction: 'Select all images containing a car.',
+
+  render(root, ctx) {
+    const grid = blobGrid({ seed: ctx.level * 17 + 3, shapes: BLOB_SHAPES });
+    root.append(grid);
+    ctx.cleanup(() => grid.replaceChildren());
+  },
+
+  // Always false. None of them contain a car. None of them contain anything.
+  verify() {
+    return false;
+  }
+};
+
+// scripts/captchas/math.js
+// CAPTCHA 3: math. SPEC.md section 6, row 3.
+//
+// Delivered with a completely straight face: a big friendly sum, four fat
+// pastel buttons, and not one of the answers is a number that helps. The
+// options move after every attempt, so the one you just ruled out is somewhere
+// else and you have to read all four again.
+
+// SPEC section 6, row 3, verbatim and in this order.
+const MATH_ANSWERS = ['purple', 'Thursday', 'sadness', '22'];
+
+// Fixed permutations rather than a random shuffle: the layout has to change on
+// every single attempt, and rolling dice can repeat itself.
+const MATH_ORDERS = [
+  [0, 1, 2, 3],
+  [2, 0, 3, 1],
+  [3, 2, 1, 0],
+  [1, 3, 0, 2],
+  [0, 3, 1, 2],
+  [2, 1, 0, 3],
+  [3, 0, 2, 1]
+];
+
+function mathOrderFor(fails) {
+  const count = Math.max(Math.trunc(fails) || 0, 0);
+  return MATH_ORDERS[count % MATH_ORDERS.length].map((index) => MATH_ANSWERS[index]);
+}
+
+function mathOption(label) {
+  const option = document.createElement('button');
+  option.type = 'button';
+  option.className = 'math-option';
+  option.setAttribute('aria-pressed', 'false');
+  option.textContent = label;
+  return option;
+}
+
+const __default_scripts_captchas_math_js = {
+  id: 'math',
+  title: 'Human Verification',
+  instruction: "Prove you're human: solve this.",
+
+  render(root, ctx) {
+    const panel = document.createElement('div');
+    panel.className = 'math-panel';
+
+    const prompt = document.createElement('p');
+    prompt.className = 'math-prompt';
+    prompt.textContent = '2 + 2 =';
+
+    const options = document.createElement('div');
+    options.className = 'math-options';
+
+    const buttons = mathOrderFor(ctx.fails).map(mathOption);
+
+    // One answer at a time, like any well behaved multiple choice question.
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        buttons.forEach((other) => {
+          const chosen = other === button;
+          other.classList.toggle('math-option-selected', chosen);
+          other.setAttribute('aria-pressed', String(chosen));
+        });
+      });
+    });
+
+    options.append(...buttons);
+    panel.append(prompt, options);
+    root.append(panel);
+
+    ctx.cleanup(() => panel.replaceChildren());
+  },
+
+  // Always false. Especially for 22.
+  verify() {
+    return false;
+  }
+};
+
+// scripts/captchas/robot.js
+// CAPTCHA 4: robot. SPEC.md section 6, row 4.
+//
+// The same blurred thumbnails, now with a faint subject in each one: a person,
+// a tree, a car, a pizza, a dog. The question is which one is the robot. There
+// is no robot. There has never been a robot.
+
+
+// The five from the spec. No sixth, at any level.
+const ROBOT_SUBJECTS = ['\u{1F9D1}', '\u{1F333}', '\u{1F697}', '\u{1F355}', '\u{1F415}'];
+
+// Nine tiles from five subjects, so a couple repeat and the grid looks like a
+// real sampled dataset rather than a neat set.
+const ROBOT_POOL = Array.from({ length: 9 }, (unused, index) => ROBOT_SUBJECTS[index % ROBOT_SUBJECTS.length]);
+
+const __default_scripts_captchas_robot_js = {
+  id: 'robot',
+  title: 'Subject Verification',
+  instruction: 'Which one is the robot?',
+
+  render(root, ctx) {
+    const grid = blobGrid({
+      seed: ctx.level * 23 + 11,
+      shapes: BLOB_SCENERY,
+      subjects: ROBOT_POOL
+    });
+
+    root.append(grid);
+    ctx.cleanup(() => grid.replaceChildren());
+  },
+
+  // Always false. There is nothing here to be right about.
+  verify() {
+    return false;
+  }
+};
+
 // scripts/captchas/index.js
 // The id to module registry. SPEC.md sections 2 and 6.
 //
 // The shell looks a module up by `captchaFor(state)`, so adding a real
 // challenge is one import and one swapped entry here. Every id in
-// CAPTCHA_ORDER must resolve, which is why they all point at the stub today.
-// T08 fills in fire, images, math and robot; T09 fills in the rest.
+// CAPTCHA_ORDER must resolve, which is why the unwritten ones still point at
+// the stub. T08 filled in fire, images, math and robot; T09 fills in the rest.
 
 const stubCaptcha = __default_scripts_captchas_stub_js;
+const fireCaptcha = __default_scripts_captchas_fire_js;
+const imagesCaptcha = __default_scripts_captchas_images_js;
+const mathCaptcha = __default_scripts_captchas_math_js;
+const robotCaptcha = __default_scripts_captchas_robot_js;
 
 const CAPTCHA_MODULES = {
-  fire: stubCaptcha,
-  images: stubCaptcha,
-  math: stubCaptcha,
-  robot: stubCaptcha,
+  fire: fireCaptcha,
+  images: imagesCaptcha,
+  math: mathCaptcha,
+  robot: robotCaptcha,
   puzzle: stubCaptcha,
   distortedText: stubCaptcha,
   timer: stubCaptcha,

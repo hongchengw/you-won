@@ -2,6 +2,22 @@
 
 Newest entries at the top. Times are EDT.
 
+## T08 — CAPTCHAs 1-4: fire, images, math, robot
+
+**2026-07-26 7:45 PM EDT**
+
+- Added `tests/captchas-1-4.test.js` (49 tests) covering the SPEC section 6 shape of all four modules, their registration under their own ids, and `verify()` returning `false` with no selection, one selection, every choice selected, and each single choice on its own. Plus per challenge: the fire grid holding exactly 25 tiles drawn only from the six spec emoji with fire always present at every level and a selected class toggling on click, the hover swap running at level 5 only when the motion flag is live and the grid holding still without it and below level 5, nine blurred tiles for images with the blur class on every tile and no tile labelled as a car anywhere in the DOM, the `2 + 2 =` prompt with exactly `purple`, `Thursday`, `sadness` and `22` and a different option order on every attempt, nine robot tiles with subjects only from the five spec emoji and no robot anywhere in the DOM at any level, and a cleanup audit that spies on `setTimeout`, `setInterval` and both global `addEventListener`s and asserts every handle a module takes out is handed back through `ctx.cleanup`.
+- Added `src/scripts/captchas/fire.js`. A 5x5 grid with a fixed multiset of five fires and four each of the other five emoji, so every level looks freshly generated and every level looks winnable. The layout is a seeded shuffle keyed on the level, which keeps the board stable across the re-render that follows each rejection instead of reshuffling under the visitor mid-attempt.
+- Added `src/scripts/captchas/shuffle.js`, a small Lehmer generator behind `captchaShuffle(items, seed)`, shared by the fire grid and the blob grids.
+- Added `src/scripts/captchas/blobs.js`, the shared blurry photo grid for challenges 2 and 4. Each tile is layered radial-gradients under `blur(6px) saturate(1.6)` with eight shape recipes keyed off `data-blob`. Three of them are a low wide mass with two dark round shapes tucked underneath, which at that blur is unmistakably a car. The blur sits on an inner canvas rather than the tile, so the selection ring and tick stay crisp.
+- Added `src/scripts/captchas/images.js` and `src/scripts/captchas/robot.js` on top of that grid. The robot grid lays a faint emoji subject over the scenery, blurred less than the background so it is just legible: legible enough to be certain none of the nine is a robot. Nothing in either grid ever names its subject, so no tile claims to be a car and no robot exists in the DOM.
+- Added `src/scripts/captchas/math.js`. A big friendly `2 + 2 =` over four fat pastel buttons reading `purple`, `Thursday`, `sadness` and `22`, one selectable at a time. The order comes from a table of seven fixed permutations indexed by `fails` rather than a random shuffle, because the layout has to change on every single attempt and dice repeat themselves.
+- Registered all four in `src/scripts/captchas/index.js`. `stub.js` stays for the four ids T09 has not reached yet.
+- Every module registers its teardown through `ctx.cleanup`, and none of them takes out a timer or a global listener at all, so nothing can outlive the screen that built it.
+- Held to the hard rule from SPEC section 4. The grids live inside the card body and never overlap the skip link, verified with the link showing at six rejections at both 390px and 1440px.
+- The fire swap is gated on the `fx-shake` chaos flag as well as the level. `fx-shake` is a MOTION_FLAG, so under `prefers-reduced-motion` the grid is completely static and the challenge is unchanged in every other respect.
+- Rebuilt `dist/index.html`, still a single file with zero external references. Drove the built file in headless Chrome through the real UI, CLAIM then six VERIFYs then skip per level, in both motion modes: the 5x5 stays square and shrinks at 390px, the 3x3 stays three wide, nothing overflows horizontally, and every one of the four looks like a challenge you are about to solve.
+
 ## T07 — CAPTCHA shell and skip link
 
 **2026-07-26 7:33 PM EDT**
