@@ -1,0 +1,23 @@
+/* Design tokens. SPEC.md section 8. */
+
+:root {
+  /* Kawaii palette, level 1 */
+  --candy-pink: #ffb7d5;
+  --candy-mint: #a8f0d8;
+  --candy-lavender: #d9c2ff;
+  --candy-lemon: #fff2a8;
+  --candy-sky: #bde3ff;
+  --ink: #5b3a53;
+
+  /* Shape */
+  --radius-blob: 32px;
+  --radius-card: 20px;
+
+  /* Type. No web fonts: the build must run from file:// with zero requests. */
+  --font-bubble: system-ui, "Trebuchet MS", Verdana, sans-serif;
+  --font-chaos: "Comic Sans MS", "Comic Sans", cursive;
+  --font-holy: Georgia, "Times New Roman", serif;
+
+  /* Sticker-style layered shadows */
+  --shadow-sticker: 0 6px 0 rgba(91, 58, 83, 0.18), 0 12px 24px rgba(91, 58, 83, 0.16);
+}

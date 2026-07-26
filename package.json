@@ -1,0 +1,16 @@
+{
+  "name": "you-won",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A prank web app that traps you in an unwinnable CAPTCHA gauntlet.",
+  "scripts": {
+    "build": "node build/build.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1",
+    "vitest": "^2.1.8"
+  }
+}
