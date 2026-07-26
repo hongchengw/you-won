@@ -2,6 +2,18 @@
 
 Newest entries at the top. Times are EDT.
 
+## T02 — State machine and router
+
+**2026-07-26 6:31 PM EDT**
+
+- Added `tests/state.test.js` covering the initial shape, every transition, the no-op guards, non-mutation of inputs, `canSkip` around the threshold, `captchaFor` across all 8 levels, and a full claim/skip playthrough that visits all 8 CAPTCHAs in order and lands on the gate.
+- Added `tests/store.test.js` covering initial state, dispatch, subscriber notification with the new state, multiple subscribers, unsubscribe, and that the held state is never mutated.
+- Added `src/scripts/state.js` with `CAPTCHA_ORDER`, `MAX_LEVEL`, `SKIP_THRESHOLD` and the pure transitions `createState`, `claim`, `fail`, `skip`, `reset`, `captchaFor`, `canSkip` from SPEC section 3. Every transition returns a new object and never mutates its input. `reset()` preserves `muted` and `audioStarted`.
+- Added `src/scripts/store.js`, a tiny observable: `createStore(initial)` returns `getState`, `dispatch(transition)`, and `subscribe(cb)` which hands back an unsubscribe function.
+- Added `src/scripts/screens/placeholder.js` plus `won.js`, `captcha.js`, and `gate.js` placeholder renderers that emit only the screen name, so T03, T07, and T10 can swap them in one at a time.
+- Rewrote `src/scripts/main.js` as the router: it creates the store, subscribes, and on each state change calls the renderer matching `state.screen`. No other logic.
+- Rebuilt `dist/index.html`, which now renders the `won` placeholder and still carries zero external references.
+
 ## T01 — Scaffolding, build pipeline, test harness
 
 **2026-07-26 6:27 PM EDT**

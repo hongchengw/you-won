@@ -49,19 +49,150 @@
   <body>
     <div id="app"></div>
     <script type="module">
-// scripts/main.js
-// Entry point. A placeholder mount until T02 wires the real store and router.
+// scripts/state.js
+// Pure state core. SPEC.md section 2 and 3.
+// Every transition returns a new object and never mutates its input.
+// No DOM, no imports.
 
-function mount(root) {
+const CAPTCHA_ORDER = [
+  'fire', 'images', 'math', 'robot',
+  'puzzle', 'distortedText', 'timer', 'rotate'
+];
+
+const MAX_LEVEL = 8;
+const SKIP_THRESHOLD = 6;
+
+function createState() {
+  return {
+    screen: 'won',
+    level: 1,
+    fails: 0,
+    muted: false,
+    audioStarted: false
+  };
+}
+
+// CLAIM PRIZE. Only meaningful from the You Won screen.
+function claim(state) {
+  if (state.screen !== 'won') return { ...state };
+  return { ...state, screen: 'captcha', fails: 0 };
+}
+
+// A rejection. Counts up and nothing else, forever.
+function fail(state) {
+  if (state.screen !== 'captcha') return { ...state };
+  return { ...state, fails: state.fails + 1 };
+}
+
+// The only way out of a CAPTCHA. Level 8 opens the gate instead of looping.
+function skip(state) {
+  if (state.screen !== 'captcha') return { ...state };
+  if (state.level >= MAX_LEVEL) return { ...state, screen: 'gate' };
+  return { ...state, screen: 'won', level: state.level + 1, fails: 0 };
+}
+
+// Back to a pristine loop 1. The mute choice and the live AudioContext survive.
+function reset(state) {
+  return { ...createState(), muted: state.muted, audioStarted: state.audioStarted };
+}
+
+function captchaFor(state) {
+  return CAPTCHA_ORDER[state.level - 1];
+}
+
+function canSkip(state) {
+  return state.fails >= SKIP_THRESHOLD;
+}
+
+// scripts/store.js
+// Tiny observable holding the current state. SPEC.md section 3.
+// dispatch takes a pure transition from state.js and applies it.
+
+function createStore(initial) {
+  let current = initial;
+  let listeners = [];
+
+  const getState = () => current;
+
+  const dispatch = (transition) => {
+    current = transition(current);
+    listeners.forEach((listener) => listener(current));
+    return current;
+  };
+
+  const subscribe = (listener) => {
+    listeners = [...listeners, listener];
+    return () => {
+      listeners = listeners.filter((entry) => entry !== listener);
+    };
+  };
+
+  return { getState, dispatch, subscribe };
+}
+
+// scripts/screens/placeholder.js
+// Stand-in body for screens that later tasks build for real.
+// Renders nothing but the screen name so the router is testable today.
+
+function renderPlaceholder(root, name) {
   const node = document.createElement('p');
-  node.className = 'loading';
-  node.textContent = 'loading...';
+  node.className = `screen screen-${name}`;
+  node.textContent = name;
   root.replaceChildren(node);
   return node;
 }
 
+// scripts/screens/won.js
+// You Won screen. Placeholder until T03. SPEC.md section 5.1.
+
+
+function renderWon(root) {
+  return renderPlaceholder(root, 'won');
+}
+
+// scripts/screens/captcha.js
+// CAPTCHA shell. Placeholder until T07. SPEC.md section 5.2.
+
+
+function renderCaptcha(root) {
+  return renderPlaceholder(root, 'captcha');
+}
+
+// scripts/screens/gate.js
+// Holy gate scene. Placeholder until T10. SPEC.md section 5.3.
+
+
+function renderGate(root) {
+  return renderPlaceholder(root, 'gate');
+}
+
+// scripts/main.js
+// Entry point. Owns the store and the router. SPEC.md section 2 and 5.
+
+
+const SCREENS = {
+  won: renderWon,
+  captcha: renderCaptcha,
+  gate: renderGate
+};
+
+// The router is deliberately dumb: read state.screen, call the matching
+// renderer, nothing else.
+function createRouter(root, store) {
+  const render = (state) => SCREENS[state.screen](root, state, store);
+  const unsubscribe = store.subscribe(render);
+  render(store.getState());
+  return unsubscribe;
+}
+
+function start(root) {
+  const store = createStore(createState());
+  createRouter(root, store);
+  return store;
+}
+
 const app = document.getElementById('app');
-if (app) mount(app);
+if (app) start(app);
 </script>
   </body>
 </html>
