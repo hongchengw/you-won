@@ -3,6 +3,7 @@
 import { createState } from './state.js';
 import { createStore } from './store.js';
 import { createAudio } from './audio.js';
+import { applyChaos } from './chaos.js';
 import { renderWon } from './screens/won.js';
 import { renderCaptcha } from './screens/captcha.js';
 import { renderGate } from './screens/gate.js';
@@ -13,11 +14,16 @@ const SCREENS = {
   gate: renderGate
 };
 
-// The router is deliberately dumb: read state.screen, call the matching
-// renderer, nothing else. `deps` carries everything a screen may not build for
-// itself, so tests can inject stubs.
+// The router is deliberately dumb: apply the chaos for the level, read
+// state.screen, call the matching renderer, nothing else. `deps` carries
+// everything a screen may not build for itself, so tests can inject stubs.
+// Chaos runs first so a screen renders straight into the right body classes,
+// and no screen ever has to know that chaos exists.
 export function createRouter(root, store, deps) {
-  const render = (state) => SCREENS[state.screen](root, state, deps);
+  const render = (state) => {
+    applyChaos(root.ownerDocument || document, state.level);
+    return SCREENS[state.screen](root, state, deps);
+  };
   const unsubscribe = store.subscribe(render);
   render(store.getState());
   return unsubscribe;

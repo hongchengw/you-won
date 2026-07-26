@@ -2,6 +2,18 @@
 
 Newest entries at the top. Times are EDT.
 
+## T04 — Chaos engine, levels 1-8
+
+**2026-07-26 7:01 PM EDT**
+
+- Added `tests/chaos.test.js` (33 tests) covering `flagsFor(1)` being empty, the exact per-level flag sets from SPEC section 4, cumulativeness across every level, purity, out-of-range clamping, the `MOTION_FLAGS` list, `applyChaos` setting `body.dataset.chaos` and one `fx-<flag>` class per active flag, stale class removal when the level drops, unrelated body classes being left alone, the clean body at level 1 after level 8, reduced motion withholding every motion flag while keeping typography, colour, backwards text, popups, glitch and the mascot flags, teardown of the trail layer, popups and overlays with no leaked intervals or listeners, `fx-dodge` moving a control exactly once and still firing its click, and a stylesheet audit that every flag has rules and every decorative overlay carries `pointer-events: none`.
+- Added `src/scripts/chaos.js` with `LEVEL_FLAGS`, `MOTION_FLAGS`, `flagsFor(level)` and `applyChaos(doc, level, opts)`. Reduced motion comes from `matchMedia` and is overridable via `opts.reducedMotion` for tests. Flags that need JS register a start function returning its own teardown, so the sparkle trail, the fake popups, the dodge listener, and the glitch and strobe overlays all stop the moment their flag goes away.
+- Added the JS helpers: a throttled pointer trail that spawns self-deleting sparkles into an inert layer, six rotating fake junk popups on an interval capped at four on screen and parked in the left and right margins, and a dodge handler that nudges an interactive element once by a small bounded offset and then never touches it again.
+- Filled in `src/styles/chaos.css`, one block per flag: tilt, saturate, Comic Sans, cursor trail, shake, neon palette override, backwards small print, popups, hypercolor grade with a hue drift, glitch RGB split plus scanlines and a rolling tear, dodge, strobe, invert pulse, spin drift, overdrive through a single `--fx-speed` knob, and reserved hooks for the T06 mascot flags.
+- Wired `applyChaos` into the router in `main.js` so every state change applies the chaos for `state.level` before the screen renders, and no screen has to know that chaos exists.
+- Held to the hard rule from SPEC section 4: every decorative layer is `pointer-events: none`, popups sit under the mute toggle and dismiss on either button, the spin drift pulls the corner controls inboard so no swing pushes them off an edge, and dodging always lets the second approach through.
+- Rebuilt `dist/index.html`, still a single file with zero external references. Smoke tested the built page in headless Chrome at levels 1 through 8 in both motion modes: the escalation reads sweet, slightly off, Comic Sans, shaking neon, backwards with popups, glitching, strobing and drifting, then full overdrive, with the controls visible and clickable at every step.
+
 ## T03 — Kawaii design system and You Won screen
 
 **2026-07-26 6:44 PM EDT**

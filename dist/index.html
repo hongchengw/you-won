@@ -268,7 +268,560 @@ button {
 /* CAPTCHA shell and challenge bodies. Filled in by T07. */
 
 /* styles/chaos.css */
-/* Chaos flags, one rule block per fx- class. Filled in by T04. */
+/* Chaos. One block per flag from SPEC.md section 4, all scoped under
+   body.fx-<flag>. The flags are cumulative, so every block has to survive being
+   stacked on top of the ones before it.
+
+   Hard rule: nothing in here may make an interactive element unclickable.
+   Every decorative layer carries `pointer-events: none` and every control that
+   moves, moves by a small, bounded amount that keeps it on screen. */
+
+body {
+  /* Overdrive multiplies every chaos duration through this one knob. */
+  --fx-speed: 1;
+  --fx-dodge-x: 0px;
+  --fx-dodge-y: 0px;
+}
+
+/* --- Level 2: tilt --------------------------------------------------------
+   The first thing that is quietly wrong. Nothing is level any more, and the
+   page has not noticed. */
+
+body.fx-tilt .won-card {
+  rotate: -3.2deg;
+}
+
+body.fx-tilt .won-ribbon {
+  rotate: 4deg;
+}
+
+body.fx-tilt .won-prize {
+  rotate: -3deg;
+}
+
+body.fx-tilt .claim-button {
+  rotate: 2.4deg;
+}
+
+body.fx-tilt .mute-toggle {
+  rotate: -8deg;
+}
+
+body.fx-tilt .captcha-card,
+body.fx-tilt .fx-tiltable {
+  rotate: 1.8deg;
+}
+
+/* --- Level 2: saturate ----------------------------------------------------
+   Ten percent too much. Reads as "nice screen" rather than "broken screen",
+   which is the point. */
+
+body.fx-saturate #app {
+  filter: saturate(1.12);
+}
+
+/* --- Level 3: comicSans ---------------------------------------------------
+   The moment the page stops being trustworthy. */
+
+body.fx-comicSans,
+body.fx-comicSans * {
+  font-family: var(--font-chaos);
+}
+
+body.fx-comicSans .bubble {
+  letter-spacing: 0.01em;
+}
+
+/* --- Level 3 and 8: cursor trail ------------------------------------------
+   Sparkles chase the pointer. The layer is inert; each sparkle deletes itself
+   when its animation ends, and chaos.js drops the whole layer with the flag. */
+
+.fx-trail-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fx-trail-dot {
+  position: absolute;
+  line-height: 1;
+  pointer-events: none;
+  translate: -50% -50%;
+  animation: fx-trail-fade calc(0.75s * var(--fx-speed)) ease-out forwards;
+}
+
+/* Level 3: a polite little sparkle, sized like a cursor decoration. */
+body.fx-cursorTrail .fx-trail-dot {
+  font-size: 1.05rem;
+}
+
+@keyframes fx-trail-fade {
+  0% {
+    opacity: 1;
+    scale: 0.6;
+    rotate: 0deg;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.6;
+    rotate: 90deg;
+    translate: calc(-50% + var(--fx-drift, 0px)) calc(-50% + 26px);
+  }
+}
+
+/* Level 8 turns the polite sparkle into a smear. */
+body.fx-trails .fx-trail-dot {
+  font-size: 1.7rem;
+  filter: drop-shadow(0 0 8px var(--candy-lemon));
+  animation-duration: calc(1.1s * var(--fx-speed));
+}
+
+/* --- Level 4: shake -------------------------------------------------------
+   Small, fast, constant. Reading is still possible. Comfort is not. */
+
+body.fx-shake #app {
+  animation: fx-shake calc(0.32s * var(--fx-speed)) linear infinite;
+}
+
+@keyframes fx-shake {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  25% {
+    translate: -3px 2px;
+    rotate: -0.35deg;
+  }
+  50% {
+    translate: 2px -3px;
+    rotate: 0.3deg;
+  }
+  75% {
+    translate: 3px 1px;
+    rotate: 0.4deg;
+  }
+}
+
+/* --- Level 4: neon --------------------------------------------------------
+   The candy palette is replaced token by token, so every component that reads
+   the tokens turns acid without knowing why. */
+
+body.fx-neon {
+  --candy-pink: #ff2fa0;
+  --candy-mint: #29ffc6;
+  --candy-lavender: #a44bff;
+  --candy-lemon: #fbff2b;
+  --candy-sky: #2be2ff;
+  --pink-deep: #ff0a86;
+  --mint-deep: #00d9a3;
+  --cream: #fff4ff;
+}
+
+body.fx-neon .won-card,
+body.fx-neon .captcha-card {
+  box-shadow:
+    0 0 0 4px rgba(255, 47, 160, 0.5),
+    0 0 26px rgba(43, 226, 255, 0.75),
+    var(--shadow-card);
+}
+
+body.fx-neon .bubble {
+  text-shadow:
+    0 0 6px var(--candy-sky),
+    0 0 18px var(--candy-pink),
+    var(--outline-bubble);
+}
+
+body.fx-neon .claim-button {
+  box-shadow: 0 8px 0 var(--mint-deep), 0 0 28px var(--candy-mint);
+}
+
+/* --- Level 5: backwards ---------------------------------------------------
+   Only the small print and anything explicitly marked. The headline stays
+   readable, so it takes a second to notice. */
+
+body.fx-backwards [data-flip],
+body.fx-backwards .won-label,
+body.fx-backwards .won-fineprint,
+body.fx-backwards .captcha-instruction {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+/* --- Level 5: popups ------------------------------------------------------
+   Fake dismissible junk windows. The layer is inert and the cards park in the
+   left and right margins, so the prize card and the skip link stay clear. */
+
+.fx-popup-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Under the mute toggle and under the trail, above the page. Junk windows are
+   junk, they do not get to own the top of the stack. */
+body.fx-popups .fx-popup-layer {
+  z-index: 15;
+}
+
+.fx-popup {
+  position: absolute;
+  left: var(--fx-popup-x, 10%);
+  top: var(--fx-popup-y, 20%);
+  width: min(230px, 42vw);
+  padding: 0 0 12px;
+  color: var(--ink);
+  background: var(--cream);
+  border: 3px solid var(--pink-deep);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sticker);
+  rotate: var(--fx-popup-tilt, 0deg);
+  pointer-events: auto;
+  animation: fx-popup-in calc(0.35s * var(--fx-speed)) var(--ease-bounce) both;
+}
+
+@keyframes fx-popup-in {
+  0% {
+    opacity: 0;
+    scale: 0.7;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+.fx-popup-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  background: linear-gradient(180deg, var(--candy-sky), var(--candy-lavender));
+  border-radius: 14px 14px 0 0;
+}
+
+.fx-popup-title {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.fx-popup-close {
+  width: 24px;
+  height: 24px;
+  font-size: 1rem;
+  line-height: 1;
+  background: var(--cream);
+  border-radius: 8px;
+  box-shadow: 0 2px 0 rgba(91, 58, 83, 0.25);
+}
+
+.fx-popup-body {
+  margin: 12px 14px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.fx-popup-cta {
+  margin: 0 14px;
+  padding: 7px 16px;
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #2f6b58;
+  background: linear-gradient(180deg, #d6fff0, var(--candy-mint));
+  border-radius: var(--radius-pill);
+  box-shadow: 0 3px 0 var(--mint-deep);
+}
+
+.fx-popup-close:focus-visible,
+.fx-popup-cta:focus-visible {
+  outline: 3px dashed var(--pink-deep);
+  outline-offset: 3px;
+}
+
+/* --- Level 5: hypercolor --------------------------------------------------
+   The grade stops being flattering and starts being a warning. */
+
+body.fx-hypercolor #app {
+  filter: saturate(2.4) contrast(1.18);
+  animation: fx-hue-drift calc(9s * var(--fx-speed)) linear infinite;
+}
+
+@keyframes fx-hue-drift {
+  0%,
+  100% {
+    filter: saturate(2.4) contrast(1.18) hue-rotate(-14deg);
+  }
+  50% {
+    filter: saturate(2.8) contrast(1.25) hue-rotate(16deg);
+  }
+}
+
+/* --- Level 6: glitch ------------------------------------------------------
+   RGB split on the type, scanlines and a rolling tear over everything. The
+   overlay is fixed and inert. */
+
+body.fx-glitch .bubble,
+body.fx-glitch .won-prize,
+body.fx-glitch .captcha-title {
+  animation: fx-rgb-split calc(2.4s * var(--fx-speed)) steps(1, end) infinite;
+}
+
+@keyframes fx-rgb-split {
+  0%,
+  62%,
+  100% {
+    text-shadow: var(--outline-bubble);
+    translate: 0 0;
+  }
+  66% {
+    text-shadow: -4px 0 0 #ff004c, 4px 0 0 #00e5ff;
+    translate: 3px 0;
+  }
+  70% {
+    text-shadow: 5px 0 0 #ff004c, -5px 0 0 #00e5ff;
+    translate: -4px 0;
+  }
+  74% {
+    text-shadow: -2px 2px 0 #ff004c, 2px -2px 0 #00e5ff;
+    translate: 2px -1px;
+  }
+}
+
+.fx-glitch-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  opacity: 0.55;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.22) 0 1px,
+    transparent 1px 4px
+  );
+}
+
+/* The tear that sweeps down the page every few seconds. */
+.fx-glitch-overlay::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14vh;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(0, 229, 255, 0.35),
+    rgba(255, 0, 76, 0.3),
+    transparent
+  );
+  animation: fx-glitch-roll calc(3.6s * var(--fx-speed)) linear infinite;
+}
+
+@keyframes fx-glitch-roll {
+  0% {
+    top: -20vh;
+  }
+  100% {
+    top: 110vh;
+  }
+}
+
+/* --- Level 6: dodge -------------------------------------------------------
+   A control jumps aside the first time the pointer arrives, then gives up.
+   The offset is small and bounded and the hit area moves with the element, so
+   the second approach always connects. chaos.js never dodges twice. */
+
+.fx-dodged {
+  translate: var(--fx-dodge-x, 0px) var(--fx-dodge-y, 0px);
+  animation: none;
+  transition: translate calc(0.18s * var(--fx-speed)) var(--ease-bounce);
+}
+
+/* --- Level 7: strobe ------------------------------------------------------
+   Withheld under reduced motion. Kept well below full white so text stays
+   legible through every flash. */
+
+.fx-strobe-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  opacity: 0;
+  pointer-events: none;
+  background: #fff;
+  animation: fx-strobe calc(0.34s * var(--fx-speed)) steps(1, end) infinite;
+}
+
+@keyframes fx-strobe {
+  0%,
+  49% {
+    opacity: 0;
+    background: #fff;
+  }
+  50%,
+  74% {
+    opacity: 0.4;
+    background: #fff;
+  }
+  75%,
+  100% {
+    opacity: 0.22;
+    background: var(--candy-lemon);
+  }
+}
+
+/* --- Level 7: invert ------------------------------------------------------
+   A periodic photo-negative pulse over the whole document. It sits on <body>
+   so it never fights the colour grade filter on #app. */
+
+body.fx-invert {
+  animation: fx-invert-pulse calc(5s * var(--fx-speed)) steps(1, end) infinite;
+}
+
+@keyframes fx-invert-pulse {
+  0%,
+  78%,
+  100% {
+    filter: none;
+  }
+  80%,
+  86% {
+    filter: invert(1) hue-rotate(180deg);
+  }
+  88% {
+    filter: none;
+  }
+  90%,
+  94% {
+    filter: invert(1);
+  }
+}
+
+/* --- Level 7: spin --------------------------------------------------------
+   The horizon stops being reliable. Slow enough to feel like your own balance
+   rather than the page. Scaled up slightly so the rotated corners never expose
+   an empty edge. */
+
+body.fx-spin .screen {
+  animation: fx-spin-drift calc(19s * var(--fx-speed)) ease-in-out infinite;
+}
+
+/* The rotation carries the corner controls with it, so they get pulled inboard
+   far enough that no swing of the drift can push them past an edge. */
+body.fx-spin .mute-toggle {
+  top: clamp(48px, 7vw, 76px);
+  right: clamp(48px, 7vw, 76px);
+}
+
+@keyframes fx-spin-drift {
+  0%,
+  100% {
+    rotate: -2.6deg;
+    scale: 1.03;
+  }
+  50% {
+    rotate: 2.6deg;
+    scale: 1.03;
+  }
+}
+
+/* --- Level 8: overdrive ---------------------------------------------------
+   The same show played at triple speed. One variable drives every chaos
+   animation, plus explicit overrides for the sweet level 1 decoration that
+   never expected to be run this hard. */
+
+body.fx-overdrive {
+  --fx-speed: 0.34;
+}
+
+body.fx-overdrive .confetti-piece {
+  animation-duration: 1.6s;
+}
+
+body.fx-overdrive .balloon {
+  animation-duration: 3.4s;
+}
+
+body.fx-overdrive .bubble-letter {
+  animation-duration: 0.5s;
+}
+
+body.fx-overdrive .claim-button {
+  animation-duration: 0.32s;
+}
+
+body.fx-overdrive .bubble {
+  letter-spacing: -0.05em;
+}
+
+body.fx-overdrive .won-card {
+  box-shadow:
+    0 0 0 6px var(--candy-lemon),
+    0 0 40px var(--candy-pink),
+    var(--shadow-card);
+}
+
+/* --- Mascot hooks ---------------------------------------------------------
+   The mascot itself is T06. These blocks only reserve the degradation, so the
+   flags mean something the moment it lands. */
+
+body.fx-mascot .mascot {
+  opacity: 1;
+}
+
+body.fx-eyeDrift .mascot-eye-left {
+  translate: -6px 2px;
+}
+
+body.fx-eyeDrift .mascot-eye-right {
+  translate: 7px -3px;
+}
+
+body.fx-mascotSnark .mascot-speech {
+  color: #b0407c;
+  font-style: italic;
+}
+
+body.fx-mascotInvert .mascot-mouth {
+  rotate: 180deg;
+}
+
+body.fx-mascotCorrupt .mascot-speech {
+  font-family: var(--font-chaos);
+  color: #ff004c;
+  text-shadow: -2px 0 0 #00e5ff, 2px 0 0 #ff004c;
+}
+
+/* --- Reduced motion -------------------------------------------------------
+   MOTION_FLAGS are already withheld in chaos.js, so this is a second pass over
+   the effects that keep their class but still animate. Colour, typography,
+   backwards text, popups, the glitch grade, and the mascot all stay: the joke
+   survives, the vestibular system is left out of it. */
+
+@media (prefers-reduced-motion: reduce) {
+  body.fx-hypercolor #app,
+  body.fx-glitch .bubble,
+  body.fx-glitch .won-prize,
+  body.fx-glitch .captcha-title,
+  .fx-glitch-overlay::after,
+  .fx-popup {
+    animation: none;
+  }
+
+  body.fx-hypercolor #app {
+    filter: saturate(2.4) contrast(1.18) hue-rotate(-14deg);
+  }
+
+  body.fx-glitch .bubble {
+    text-shadow: -3px 0 0 #ff004c, 3px 0 0 #00e5ff;
+  }
+}
 
 /* styles/gate.css */
 /* Holy gate scene. Filled in by T10. */
@@ -661,6 +1214,266 @@ function createAudio() {
   };
 }
 
+// scripts/chaos.js
+// Chaos engine. SPEC.md section 4.
+// Everything keys off `body[data-chaos]` and one `fx-<flag>` class per active
+// flag, so a screen degrades without ever knowing chaos exists.
+//
+// Hard rule from the spec: at every level, in both motion modes, interactive
+// elements stay visible, hit-testable, and clickable. Every decoration added
+// here is `pointer-events: none`, and `dodge` moves a control exactly once
+// before letting the click through.
+
+
+// Each level's own new flags. The union from 1 through L is what actually runs.
+const LEVEL_FLAGS = {
+  1: [],
+  2: ['mascot', 'tilt', 'saturate'],
+  3: ['comicSans', 'eyeDrift', 'cursorTrail'],
+  4: ['shake', 'neon', 'mascotSnark'],
+  5: ['backwards', 'popups', 'hypercolor'],
+  6: ['glitch', 'dodge', 'mascotInvert'],
+  7: ['strobe', 'invert', 'spin'],
+  8: ['overdrive', 'trails', 'mascotCorrupt']
+};
+
+// Withheld when the OS asks for reduced motion. Colour, typography, backwards
+// text, popups, the glitch overlay, and the mascot all survive, so the joke
+// still lands and the app stays completable.
+const MOTION_FLAGS = [
+  'shake', 'spin', 'strobe', 'invert', 'dodge', 'cursorTrail', 'trails', 'overdrive'
+];
+
+const ALL_FLAGS = Object.values(LEVEL_FLAGS).flat();
+
+const clampLevel = (level) => Math.min(Math.max(Math.trunc(level) || 1, 1), MAX_LEVEL);
+
+// Cumulative: every flag from level 1 through `level`, in level order.
+function flagsFor(level) {
+  const top = clampLevel(level);
+  const flags = [];
+  for (let step = 1; step <= top; step += 1) flags.push(...LEVEL_FLAGS[step]);
+  return flags;
+}
+
+function prefersReducedMotion(doc) {
+  const view = doc.defaultView;
+  if (!view || typeof view.matchMedia !== 'function') return false;
+  return view.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// --- Live effects ----------------------------------------------------------
+// A flag that needs JS registers a start function returning its own teardown.
+// `syncEffects` starts and stops them so nothing outlives its flag: no orphan
+// intervals, no orphan listeners, no orphan nodes.
+
+const running = new Map();
+
+function syncEffect(name, active, startEffect) {
+  if (active && !running.has(name)) running.set(name, startEffect());
+  if (!active && running.has(name)) {
+    running.get(name)();
+    running.delete(name);
+  }
+}
+
+// --- Cursor trail ----------------------------------------------------------
+
+const TRAIL_SPARKLES = ['✨', '💖', '⭐', '🌈', '🍬'];
+const TRAIL_LIFETIME = 750;
+
+// One sparkle per pointer sample, throttled so a fast flick does not carpet the
+// page. At level 8 `fx-trails` thickens it via CSS, read live off the body.
+function startTrail(doc) {
+  const layer = doc.createElement('div');
+  layer.className = 'fx-trail-layer';
+  layer.setAttribute('aria-hidden', 'true');
+  doc.body.append(layer);
+
+  const timers = new Set();
+  let last = 0;
+  let index = 0;
+
+  const onMove = (event) => {
+    const heavy = doc.body.classList.contains('fx-trails');
+    const now = Date.now();
+    if (now - last < (heavy ? 16 : 45)) return;
+    last = now;
+
+    const dot = doc.createElement('span');
+    dot.className = 'fx-trail-dot';
+    dot.textContent = TRAIL_SPARKLES[index % TRAIL_SPARKLES.length];
+    dot.style.left = `${event.clientX || 0}px`;
+    dot.style.top = `${event.clientY || 0}px`;
+    dot.style.setProperty('--fx-drift', `${((index * 37) % 40) - 20}px`);
+    index += 1;
+    layer.append(dot);
+
+    const timer = setTimeout(() => {
+      dot.remove();
+      timers.delete(timer);
+    }, TRAIL_LIFETIME);
+    timers.add(timer);
+  };
+
+  doc.addEventListener('pointermove', onMove);
+
+  return () => {
+    doc.removeEventListener('pointermove', onMove);
+    timers.forEach(clearTimeout);
+    timers.clear();
+    layer.remove();
+  };
+}
+
+// --- Fake popups -----------------------------------------------------------
+
+const POPUP_ADS = [
+  { title: 'CONGRATULATIONS', body: 'You are the 1,000,000th visitor!', cta: 'CLAIM AGAIN' },
+  { title: 'SYSTEM NOTICE', body: 'Your prize is 98% verified. Do not close this window.', cta: 'OK' },
+  { title: 'HOT SINGLE PRIZES', body: 'Prizes in your area want to meet you.', cta: 'VIEW' },
+  { title: 'WARNING', body: 'Suspicious human activity detected on this device.', cta: 'IGNORE' },
+  { title: 'FREE DOWNLOAD', body: 'Install PrizeToolbar™ to speed up your winnings.', cta: 'INSTALL' },
+  { title: 'ARE YOU THERE?', body: 'The prize is getting impatient.', cta: 'SORRY' }
+];
+
+const POPUP_INTERVAL = 4200;
+const POPUP_LIMIT = 4;
+
+// The layer itself is pointer-transparent; only the popup cards take clicks,
+// so a stack of these can never bury the skip link.
+function startPopups(doc) {
+  const layer = doc.createElement('div');
+  layer.className = 'fx-popup-layer';
+  doc.body.append(layer);
+
+  let index = 0;
+
+  const spawn = () => {
+    if (layer.children.length >= POPUP_LIMIT) return;
+    layer.append(buildPopup(doc, POPUP_ADS[index % POPUP_ADS.length], index));
+    index += 1;
+  };
+
+  spawn();
+  const timer = setInterval(spawn, POPUP_INTERVAL);
+
+  return () => {
+    clearInterval(timer);
+    layer.remove();
+  };
+}
+
+function buildPopup(doc, ad, index) {
+  const popup = doc.createElement('div');
+  popup.className = 'fx-popup';
+  // Biased to the left and right margins: the centre of the screen belongs to
+  // the card and the skip link, and popups must never park on top of them.
+  const side = index % 2 ? 64 : 4;
+  popup.style.setProperty('--fx-popup-x', `${side + ((index * 7) % 10)}%`);
+  popup.style.setProperty('--fx-popup-y', `${8 + ((index * 23) % 62)}%`);
+  popup.style.setProperty('--fx-popup-tilt', `${((index % 5) - 2) * 2.5}deg`);
+
+  const bar = doc.createElement('div');
+  bar.className = 'fx-popup-bar';
+
+  const title = doc.createElement('span');
+  title.className = 'fx-popup-title';
+  title.textContent = ad.title;
+
+  const close = doc.createElement('button');
+  close.type = 'button';
+  close.className = 'fx-popup-close';
+  close.dataset.action = 'dismiss-popup';
+  close.setAttribute('aria-label', `Dismiss ${ad.title}`);
+  close.textContent = '×';
+  close.addEventListener('click', () => popup.remove());
+
+  const body = doc.createElement('p');
+  body.className = 'fx-popup-body';
+  body.textContent = ad.body;
+
+  const cta = doc.createElement('button');
+  cta.type = 'button';
+  cta.className = 'fx-popup-cta';
+  cta.dataset.action = 'dismiss-popup';
+  cta.textContent = ad.cta;
+  cta.addEventListener('click', () => popup.remove());
+
+  bar.append(title, close);
+  popup.append(bar, body, cta);
+  return popup;
+}
+
+// --- Decorative overlays ---------------------------------------------------
+
+// Pure decoration: styled entirely in chaos.css and always pointer-transparent,
+// so nothing here can ever swallow a click.
+function startOverlay(doc, className) {
+  const node = doc.createElement('div');
+  node.className = className;
+  node.setAttribute('aria-hidden', 'true');
+  doc.body.append(node);
+  return () => node.remove();
+}
+
+// --- Dodging controls ------------------------------------------------------
+
+const DODGE_TARGETS = 'button, a[href], [data-action], input, select';
+
+// A control jumps aside the first time the pointer reaches it, then gives up.
+// The offset is small and stays on screen, so the second approach always wins.
+function startDodge(doc) {
+  const onOver = (event) => {
+    const target = event.target;
+    if (!target || typeof target.closest !== 'function') return;
+
+    const control = target.closest(DODGE_TARGETS);
+    if (!control || control.dataset.fxDodged) return;
+
+    const seed = doc.querySelectorAll('[data-fx-dodged]').length;
+    control.dataset.fxDodged = 'true';
+    control.style.setProperty('--fx-dodge-x', `${(seed % 2 ? -1 : 1) * 42}px`);
+    control.style.setProperty('--fx-dodge-y', `${(seed % 3) * 14 - 14}px`);
+    control.classList.add('fx-dodged');
+  };
+
+  doc.addEventListener('pointerover', onOver, true);
+
+  return () => {
+    doc.removeEventListener('pointerover', onOver, true);
+    doc.querySelectorAll('.fx-dodged').forEach((node) => {
+      node.classList.remove('fx-dodged');
+      node.style.removeProperty('--fx-dodge-x');
+      node.style.removeProperty('--fx-dodge-y');
+      delete node.dataset.fxDodged;
+    });
+  };
+}
+
+// --- Entry point -----------------------------------------------------------
+
+function applyChaos(doc, level, options = {}) {
+  const target = clampLevel(level);
+  const reduced = options.reducedMotion === undefined
+    ? prefersReducedMotion(doc)
+    : Boolean(options.reducedMotion);
+
+  const active = flagsFor(target).filter((flag) => !(reduced && MOTION_FLAGS.includes(flag)));
+  const body = doc.body;
+
+  body.dataset.chaos = String(target);
+  ALL_FLAGS.forEach((flag) => body.classList.toggle(`fx-${flag}`, active.includes(flag)));
+
+  syncEffect('trail', active.includes('cursorTrail') || active.includes('trails'), () => startTrail(doc));
+  syncEffect('popups', active.includes('popups'), () => startPopups(doc));
+  syncEffect('dodge', active.includes('dodge'), () => startDodge(doc));
+  syncEffect('glitchOverlay', active.includes('glitch'), () => startOverlay(doc, 'fx-glitch-overlay'));
+  syncEffect('strobeOverlay', active.includes('strobe'), () => startOverlay(doc, 'fx-strobe-overlay'));
+
+  return active;
+}
+
 // scripts/screens/mute.js
 // The persistent mute toggle. SPEC.md section 5.1: present on every screen.
 // Mute genuinely works at every level, so this is never part of the prank.
@@ -853,11 +1666,16 @@ const SCREENS = {
   gate: renderGate
 };
 
-// The router is deliberately dumb: read state.screen, call the matching
-// renderer, nothing else. `deps` carries everything a screen may not build for
-// itself, so tests can inject stubs.
+// The router is deliberately dumb: apply the chaos for the level, read
+// state.screen, call the matching renderer, nothing else. `deps` carries
+// everything a screen may not build for itself, so tests can inject stubs.
+// Chaos runs first so a screen renders straight into the right body classes,
+// and no screen ever has to know that chaos exists.
 function createRouter(root, store, deps) {
-  const render = (state) => SCREENS[state.screen](root, state, deps);
+  const render = (state) => {
+    applyChaos(root.ownerDocument || document, state.level);
+    return SCREENS[state.screen](root, state, deps);
+  };
   const unsubscribe = store.subscribe(render);
   render(store.getState());
   return unsubscribe;
