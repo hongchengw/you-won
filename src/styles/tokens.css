@@ -9,9 +9,16 @@
   --candy-sky: #bde3ff;
   --ink: #5b3a53;
 
+  /* Derived tints. Deeper cousins of the palette, for outlines and shading. */
+  --pink-deep: #ff86bb;
+  --mint-deep: #6fddb9;
+  --lavender-deep: #b795f5;
+  --cream: #fff8fb;
+
   /* Shape */
   --radius-blob: 32px;
   --radius-card: 20px;
+  --radius-pill: 999px;
 
   /* Type. No web fonts: the build must run from file:// with zero requests. */
   --font-bubble: system-ui, "Trebuchet MS", Verdana, sans-serif;
@@ -20,4 +27,18 @@
 
   /* Sticker-style layered shadows */
   --shadow-sticker: 0 6px 0 rgba(91, 58, 83, 0.18), 0 12px 24px rgba(91, 58, 83, 0.16);
+  --shadow-card: 0 10px 0 rgba(255, 134, 187, 0.35), 0 22px 45px rgba(91, 58, 83, 0.22);
+  --shadow-button: 0 8px 0 var(--mint-deep), 0 14px 22px rgba(91, 58, 83, 0.28);
+  --shadow-button-active: 0 3px 0 var(--mint-deep), 0 6px 12px rgba(91, 58, 83, 0.26);
+
+  /* The faked bubble outline: layered text-shadow rings, no web font needed. */
+  --outline-bubble:
+    -3px 0 0 var(--cream), 3px 0 0 var(--cream),
+    0 -3px 0 var(--cream), 0 3px 0 var(--cream),
+    -3px -3px 0 var(--cream), 3px -3px 0 var(--cream),
+    -3px 3px 0 var(--cream), 3px 3px 0 var(--cream),
+    0 7px 0 var(--pink-deep), 0 10px 14px rgba(91, 58, 83, 0.3);
+
+  /* Motion */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }

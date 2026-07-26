@@ -2,6 +2,20 @@
 
 Newest entries at the top. Times are EDT.
 
+## T03 — Kawaii design system and You Won screen
+
+**2026-07-26 6:44 PM EDT**
+
+- Added `tests/won.test.js` covering the headline text, the CLAIM PRIZE button, the prize line for the current level, the claim transition to `screen: 'captcha'`, audio starting exactly once across repeated claims, the confetti and balloon decoration nodes, the mute toggle flipping `muted` in state and on the audio object, idempotent re-render, and `prizeFor` across all 8 levels plus out-of-range input.
+- Replaced the `src/scripts/screens/won.js` placeholder with the real screen: `renderWon(root, state, deps)` builds the prize card, the CSS-only decoration, and the mute toggle, and exports `prizeFor(level)` with 8 escalating absurd prizes. Claiming starts audio on the first ever click, plays a blip, and dispatches a transition that runs `claim()` and records `audioStarted`.
+- Added `src/scripts/screens/mute.js` with the `toggleMute` transition and the persistent corner toggle, shared by every screen from SPEC section 5.1.
+- Added `src/scripts/audio.js` as a no-op stub with the final SPEC section 7 shape (`start`, `setLevel`, `setMuted`, `isStarted`, `isMuted`, `blip`, `buzz`, `holyPad`, `stopMusic`). It tracks `started` and `muted` only. T05 fills in the Web Audio internals.
+- Wired an injectable `deps` object (`{ dispatch, audio }`) through `main.js` into every screen renderer, so tests can stub audio and later screens get the same handles.
+- Filled in `src/styles/tokens.css` with the derived tints, radii, motion easing, and the layered `--outline-bubble` text-shadow ring that fakes bubble type without a web font.
+- Filled in `src/styles/base.css`: pink to lavender to mint page gradient with a polka wash, centered screen layout, per-letter bubble headline with sticker-scatter rotation and a pop animation, the fat bouncy mint CLAIM button with gloss, hover lift, and active squish, and the round mute toggle.
+- Filled in `src/styles/won.css`: the cream prize card with a white ring, sticker shadow, bow, and corner sparkle, the dashed prize plaque, and the CSS-only confetti and balloons. Decoration uses negative animation delays so every loop is already mid-flight on first paint, and reduced motion settles it into a static scatter rather than hiding it.
+- Rebuilt `dist/index.html`, still a single file with zero external references. Verified in a headless browser at 390px, 1200px, and 1440px, and that clicking CLAIM in the built page reaches the captcha placeholder.
+
 ## T02 — State machine and router
 
 **2026-07-26 6:31 PM EDT**

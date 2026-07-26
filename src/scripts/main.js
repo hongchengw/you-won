@@ -2,6 +2,7 @@
 
 import { createState } from './state.js';
 import { createStore } from './store.js';
+import { createAudio } from './audio.js';
 import { renderWon } from './screens/won.js';
 import { renderCaptcha } from './screens/captcha.js';
 import { renderGate } from './screens/gate.js';
@@ -13,17 +14,19 @@ const SCREENS = {
 };
 
 // The router is deliberately dumb: read state.screen, call the matching
-// renderer, nothing else.
-export function createRouter(root, store) {
-  const render = (state) => SCREENS[state.screen](root, state, store);
+// renderer, nothing else. `deps` carries everything a screen may not build for
+// itself, so tests can inject stubs.
+export function createRouter(root, store, deps) {
+  const render = (state) => SCREENS[state.screen](root, state, deps);
   const unsubscribe = store.subscribe(render);
   render(store.getState());
   return unsubscribe;
 }
 
-export function start(root) {
+export function start(root, options = {}) {
+  const audio = options.audio || createAudio();
   const store = createStore(createState());
-  createRouter(root, store);
+  createRouter(root, store, { dispatch: store.dispatch, audio });
   return store;
 }
 

@@ -1,1 +1,211 @@
-/* Base layout and resets. Filled in by T03. */
+/* Base layout, reset, and the shared kawaii furniture. SPEC.md section 8. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-bubble);
+  color: var(--ink);
+  background:
+    radial-gradient(120% 90% at 12% 8%, rgba(255, 242, 168, 0.85), transparent 55%),
+    radial-gradient(110% 85% at 88% 12%, rgba(189, 227, 255, 0.8), transparent 55%),
+    linear-gradient(165deg, var(--candy-pink) 0%, var(--candy-lavender) 48%, var(--candy-mint) 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A soft polka wash so the flat gradient reads as candy paper. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.75) 2px, transparent 2px);
+  background-size: 34px 34px;
+  background-position: 0 0;
+}
+
+#app {
+  position: relative;
+  min-height: 100%;
+}
+
+.screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: clamp(20px, 5vw, 56px);
+  text-align: center;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* --- Faked bubble type ----------------------------------------------------
+   No web fonts are available, so the chunky look comes from a heavy system
+   stack, tight tracking, and layered text-shadow rings. Each letter is its own
+   span so it can sit at a slightly different angle, like stickers on a card. */
+
+.bubble {
+  display: block;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  color: var(--pink-deep);
+  text-shadow: var(--outline-bubble);
+}
+
+.bubble-letter {
+  display: inline-block;
+  /* Spaces must not collapse when every character is its own inline-block. */
+  white-space: pre;
+  transform-origin: 50% 90%;
+  animation: letter-pop 2.8s var(--ease-bounce) infinite;
+  animation-delay: calc(var(--i) * 0.06s);
+}
+
+/* Sticker-scatter: a repeating 5-step tilt, so no letter sits perfectly level.
+   nth-child keeps this to plain CSS with no per-letter inline angles. */
+.bubble-letter:nth-child(5n + 1) {
+  transform: rotate(-4.5deg);
+}
+
+.bubble-letter:nth-child(5n + 2) {
+  transform: rotate(2.5deg) translateY(-2px);
+}
+
+.bubble-letter:nth-child(5n + 3) {
+  transform: rotate(-1.5deg) translateY(1px);
+}
+
+.bubble-letter:nth-child(5n + 4) {
+  transform: rotate(4.5deg);
+}
+
+.bubble-letter:nth-child(5n + 5) {
+  transform: rotate(-2.5deg) translateY(-1px);
+}
+
+@keyframes letter-pop {
+  0%,
+  70%,
+  100% {
+    translate: 0 0;
+  }
+  78% {
+    translate: 0 -7px;
+  }
+  86% {
+    translate: 0 1px;
+  }
+}
+
+/* --- Fat bouncy mint button ---------------------------------------------- */
+
+.claim-button {
+  position: relative;
+  margin-top: clamp(18px, 3vw, 28px);
+  padding: clamp(16px, 2.4vw, 22px) clamp(30px, 5vw, 52px);
+  font-size: clamp(1.15rem, 3.4vw, 1.7rem);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #2f6b58;
+  background: linear-gradient(180deg, #d6fff0 0%, var(--candy-mint) 55%, var(--mint-deep) 100%);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-button);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.85);
+  animation: button-bounce 1.9s var(--ease-bounce) infinite;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* The glossy highlight that sells the candy look. */
+.claim-button::before {
+  content: "";
+  position: absolute;
+  inset: 6px 14px auto 14px;
+  height: 38%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.claim-button:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.claim-button:active {
+  transform: translateY(6px) scale(0.97);
+  box-shadow: var(--shadow-button-active);
+  animation-play-state: paused;
+}
+
+.claim-button:focus-visible {
+  outline: 4px dashed var(--pink-deep);
+  outline-offset: 6px;
+}
+
+@keyframes button-bounce {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+/* --- Mute toggle, persistent on every screen ----------------------------- */
+
+.mute-toggle {
+  position: fixed;
+  top: clamp(12px, 2.5vw, 22px);
+  right: clamp(12px, 2.5vw, 22px);
+  z-index: 20;
+  width: 52px;
+  height: 52px;
+  font-size: 1.4rem;
+  line-height: 1;
+  background: var(--cream);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sticker);
+  transition: transform 0.15s var(--ease-bounce);
+}
+
+.mute-toggle:hover {
+  transform: scale(1.08) rotate(-6deg);
+}
+
+.mute-toggle:active {
+  transform: scale(0.92);
+}
+
+.mute-toggle:focus-visible {
+  outline: 3px dashed var(--pink-deep);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble-letter,
+  .claim-button {
+    animation: none;
+  }
+}

@@ -1,1 +1,275 @@
-/* You Won screen. Filled in by T03. */
+/* You Won screen: the card, the confetti, the balloons. SPEC.md sections 5.1 and 8. */
+
+.screen-won {
+  overflow: hidden;
+}
+
+/* --- Prize card ----------------------------------------------------------- */
+
+.won-card {
+  position: relative;
+  z-index: 2;
+  width: min(680px, 100%);
+  padding: clamp(28px, 5vw, 54px) clamp(20px, 4.5vw, 48px) clamp(24px, 4vw, 44px);
+  background:
+    radial-gradient(90% 60% at 50% 0%, rgba(255, 242, 168, 0.55), transparent 70%),
+    linear-gradient(180deg, var(--cream) 0%, #fff 60%, #fff3f8 100%);
+  border: 6px solid #fff;
+  border-radius: var(--radius-blob);
+  box-shadow: 0 0 0 12px rgba(255, 255, 255, 0.45), var(--shadow-card);
+  rotate: -1deg;
+  animation: card-drop 0.7s var(--ease-bounce) both;
+}
+
+/* A bow on the parcel and a sparkle in the corner: sticker trim, no images. */
+.won-card::before,
+.won-card::after {
+  position: absolute;
+  pointer-events: none;
+}
+
+.won-card::before {
+  content: "🎀";
+  top: -34px;
+  left: 50%;
+  font-size: 2.6rem;
+  transform: translateX(-50%) rotate(-8deg);
+  filter: drop-shadow(0 4px 6px rgba(91, 58, 83, 0.3));
+}
+
+.won-card::after {
+  content: "✨";
+  right: -14px;
+  bottom: -18px;
+  font-size: 2rem;
+  animation: sparkle-twinkle 2.4s ease-in-out infinite;
+}
+
+@keyframes sparkle-twinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+    scale: 0.85;
+  }
+  50% {
+    opacity: 1;
+    scale: 1.15;
+  }
+}
+
+@keyframes card-drop {
+  0% {
+    opacity: 0;
+    translate: 0 -28px;
+    scale: 0.94;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+.won-ribbon {
+  display: inline-block;
+  margin: 0 0 clamp(14px, 2.5vw, 22px);
+  padding: 8px 22px;
+  font-size: clamp(0.7rem, 2.2vw, 0.85rem);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #8a4f74;
+  background: linear-gradient(180deg, #fff 0%, var(--candy-sky) 100%);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-sticker);
+  rotate: 1.5deg;
+}
+
+.won-headline {
+  margin: 0;
+  font-size: clamp(1.9rem, 9vw, 4.4rem);
+}
+
+.won-headline .bubble-congrats {
+  font-size: 0.5em;
+  color: var(--lavender-deep);
+  letter-spacing: 0.01em;
+}
+
+.won-headline .bubble-won {
+  margin-top: 0.12em;
+  font-size: 1em;
+}
+
+.won-label {
+  margin: clamp(18px, 3vw, 28px) 0 6px;
+  font-size: clamp(0.85rem, 2.6vw, 1.05rem);
+  font-weight: 600;
+  color: #916b86;
+}
+
+.won-prize {
+  display: inline-block;
+  margin: 0;
+  padding: 10px 24px;
+  font-size: clamp(1rem, 3.4vw, 1.5rem);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  background: linear-gradient(180deg, #fff 0%, var(--candy-lemon) 100%);
+  border: 3px dashed var(--pink-deep);
+  border-radius: var(--radius-card);
+  box-shadow: 0 5px 0 rgba(255, 134, 187, 0.28);
+  rotate: -1.2deg;
+}
+
+.won-fineprint {
+  margin: clamp(16px, 2.5vw, 22px) 0 0;
+  font-size: clamp(0.68rem, 2vw, 0.8rem);
+  color: #a789a0;
+}
+
+/* --- Decoration. Pure CSS motion, no JS timers, nothing to clean up. ------ */
+
+.decor {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -12vh;
+  left: var(--x);
+  width: 14px;
+  height: 20px;
+  background: var(--candy-pink);
+  border-radius: 4px;
+  opacity: 1;
+  box-shadow: 0 2px 4px rgba(91, 58, 83, 0.12);
+  animation: confetti-fall 7.5s linear infinite;
+  animation-delay: var(--delay);
+}
+
+/* Colour wheel, cycled by position so the fall never looks striped. */
+.confetti-piece:nth-child(5n + 2) {
+  background: var(--candy-mint);
+}
+
+.confetti-piece:nth-child(5n + 3) {
+  background: var(--candy-lavender);
+}
+
+.confetti-piece:nth-child(5n + 4) {
+  background: var(--candy-lemon);
+}
+
+.confetti-piece:nth-child(5n + 5) {
+  background: var(--candy-sky);
+}
+
+.confetti-piece:nth-child(3n) {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+}
+
+.confetti-piece:nth-child(4n) {
+  width: 10px;
+  height: 24px;
+  animation-duration: 9.5s;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(125vh) rotate(calc(var(--spin) * 900deg));
+  }
+}
+
+.balloon {
+  position: absolute;
+  bottom: -34vh;
+  left: var(--x);
+  width: 76px;
+  height: 96px;
+  border-radius: 50% 50% 50% 50% / 46% 46% 54% 54%;
+  box-shadow: inset -10px -12px 22px rgba(91, 58, 83, 0.16), inset 12px 14px 20px rgba(255, 255, 255, 0.7);
+  opacity: 0.75;
+  animation: balloon-rise 19s linear infinite;
+  animation-delay: var(--delay);
+}
+
+/* The string, plus a knot at the base. */
+.balloon::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 2px;
+  height: 70px;
+  background: rgba(91, 58, 83, 0.25);
+  transform: translateX(-50%);
+}
+
+.balloon-pink {
+  background: var(--candy-pink);
+}
+
+.balloon-mint {
+  background: var(--candy-mint);
+}
+
+.balloon-lavender {
+  background: var(--candy-lavender);
+}
+
+.balloon-lemon {
+  background: var(--candy-lemon);
+}
+
+.balloon-sky {
+  background: var(--candy-sky);
+}
+
+@keyframes balloon-rise {
+  0% {
+    transform: translate(0, 0) rotate(-4deg);
+  }
+  50% {
+    transform: translate(26px, -70vh) rotate(5deg);
+  }
+  100% {
+    transform: translate(0, -140vh) rotate(-4deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .balloon {
+    width: 56px;
+    height: 72px;
+  }
+}
+
+/* Reduced motion keeps the party, it just stops moving: the confetti and the
+   balloons settle into a scattered still life instead of disappearing. */
+@media (prefers-reduced-motion: reduce) {
+  .won-card,
+  .won-card::after,
+  .confetti-piece,
+  .balloon {
+    animation: none;
+  }
+
+  .confetti-piece {
+    top: var(--y);
+    opacity: 0.75;
+  }
+
+  .balloon {
+    bottom: 6vh;
+  }
+}

@@ -17,9 +17,16 @@
   --candy-sky: #bde3ff;
   --ink: #5b3a53;
 
+  /* Derived tints. Deeper cousins of the palette, for outlines and shading. */
+  --pink-deep: #ff86bb;
+  --mint-deep: #6fddb9;
+  --lavender-deep: #b795f5;
+  --cream: #fff8fb;
+
   /* Shape */
   --radius-blob: 32px;
   --radius-card: 20px;
+  --radius-pill: 999px;
 
   /* Type. No web fonts: the build must run from file:// with zero requests. */
   --font-bubble: system-ui, "Trebuchet MS", Verdana, sans-serif;
@@ -28,10 +35,234 @@
 
   /* Sticker-style layered shadows */
   --shadow-sticker: 0 6px 0 rgba(91, 58, 83, 0.18), 0 12px 24px rgba(91, 58, 83, 0.16);
+  --shadow-card: 0 10px 0 rgba(255, 134, 187, 0.35), 0 22px 45px rgba(91, 58, 83, 0.22);
+  --shadow-button: 0 8px 0 var(--mint-deep), 0 14px 22px rgba(91, 58, 83, 0.28);
+  --shadow-button-active: 0 3px 0 var(--mint-deep), 0 6px 12px rgba(91, 58, 83, 0.26);
+
+  /* The faked bubble outline: layered text-shadow rings, no web font needed. */
+  --outline-bubble:
+    -3px 0 0 var(--cream), 3px 0 0 var(--cream),
+    0 -3px 0 var(--cream), 0 3px 0 var(--cream),
+    -3px -3px 0 var(--cream), 3px -3px 0 var(--cream),
+    -3px 3px 0 var(--cream), 3px 3px 0 var(--cream),
+    0 7px 0 var(--pink-deep), 0 10px 14px rgba(91, 58, 83, 0.3);
+
+  /* Motion */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* styles/base.css */
-/* Base layout and resets. Filled in by T03. */
+/* Base layout, reset, and the shared kawaii furniture. SPEC.md section 8. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-bubble);
+  color: var(--ink);
+  background:
+    radial-gradient(120% 90% at 12% 8%, rgba(255, 242, 168, 0.85), transparent 55%),
+    radial-gradient(110% 85% at 88% 12%, rgba(189, 227, 255, 0.8), transparent 55%),
+    linear-gradient(165deg, var(--candy-pink) 0%, var(--candy-lavender) 48%, var(--candy-mint) 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A soft polka wash so the flat gradient reads as candy paper. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.75) 2px, transparent 2px);
+  background-size: 34px 34px;
+  background-position: 0 0;
+}
+
+#app {
+  position: relative;
+  min-height: 100%;
+}
+
+.screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: clamp(20px, 5vw, 56px);
+  text-align: center;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* --- Faked bubble type ----------------------------------------------------
+   No web fonts are available, so the chunky look comes from a heavy system
+   stack, tight tracking, and layered text-shadow rings. Each letter is its own
+   span so it can sit at a slightly different angle, like stickers on a card. */
+
+.bubble {
+  display: block;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  color: var(--pink-deep);
+  text-shadow: var(--outline-bubble);
+}
+
+.bubble-letter {
+  display: inline-block;
+  /* Spaces must not collapse when every character is its own inline-block. */
+  white-space: pre;
+  transform-origin: 50% 90%;
+  animation: letter-pop 2.8s var(--ease-bounce) infinite;
+  animation-delay: calc(var(--i) * 0.06s);
+}
+
+/* Sticker-scatter: a repeating 5-step tilt, so no letter sits perfectly level.
+   nth-child keeps this to plain CSS with no per-letter inline angles. */
+.bubble-letter:nth-child(5n + 1) {
+  transform: rotate(-4.5deg);
+}
+
+.bubble-letter:nth-child(5n + 2) {
+  transform: rotate(2.5deg) translateY(-2px);
+}
+
+.bubble-letter:nth-child(5n + 3) {
+  transform: rotate(-1.5deg) translateY(1px);
+}
+
+.bubble-letter:nth-child(5n + 4) {
+  transform: rotate(4.5deg);
+}
+
+.bubble-letter:nth-child(5n + 5) {
+  transform: rotate(-2.5deg) translateY(-1px);
+}
+
+@keyframes letter-pop {
+  0%,
+  70%,
+  100% {
+    translate: 0 0;
+  }
+  78% {
+    translate: 0 -7px;
+  }
+  86% {
+    translate: 0 1px;
+  }
+}
+
+/* --- Fat bouncy mint button ---------------------------------------------- */
+
+.claim-button {
+  position: relative;
+  margin-top: clamp(18px, 3vw, 28px);
+  padding: clamp(16px, 2.4vw, 22px) clamp(30px, 5vw, 52px);
+  font-size: clamp(1.15rem, 3.4vw, 1.7rem);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #2f6b58;
+  background: linear-gradient(180deg, #d6fff0 0%, var(--candy-mint) 55%, var(--mint-deep) 100%);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-button);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.85);
+  animation: button-bounce 1.9s var(--ease-bounce) infinite;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* The glossy highlight that sells the candy look. */
+.claim-button::before {
+  content: "";
+  position: absolute;
+  inset: 6px 14px auto 14px;
+  height: 38%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.claim-button:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.claim-button:active {
+  transform: translateY(6px) scale(0.97);
+  box-shadow: var(--shadow-button-active);
+  animation-play-state: paused;
+}
+
+.claim-button:focus-visible {
+  outline: 4px dashed var(--pink-deep);
+  outline-offset: 6px;
+}
+
+@keyframes button-bounce {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+/* --- Mute toggle, persistent on every screen ----------------------------- */
+
+.mute-toggle {
+  position: fixed;
+  top: clamp(12px, 2.5vw, 22px);
+  right: clamp(12px, 2.5vw, 22px);
+  z-index: 20;
+  width: 52px;
+  height: 52px;
+  font-size: 1.4rem;
+  line-height: 1;
+  background: var(--cream);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sticker);
+  transition: transform 0.15s var(--ease-bounce);
+}
+
+.mute-toggle:hover {
+  transform: scale(1.08) rotate(-6deg);
+}
+
+.mute-toggle:active {
+  transform: scale(0.92);
+}
+
+.mute-toggle:focus-visible {
+  outline: 3px dashed var(--pink-deep);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble-letter,
+  .claim-button {
+    animation: none;
+  }
+}
 
 /* styles/captcha.css */
 /* CAPTCHA shell and challenge bodies. Filled in by T07. */
@@ -43,7 +274,281 @@
 /* Holy gate scene. Filled in by T10. */
 
 /* styles/won.css */
-/* You Won screen. Filled in by T03. */
+/* You Won screen: the card, the confetti, the balloons. SPEC.md sections 5.1 and 8. */
+
+.screen-won {
+  overflow: hidden;
+}
+
+/* --- Prize card ----------------------------------------------------------- */
+
+.won-card {
+  position: relative;
+  z-index: 2;
+  width: min(680px, 100%);
+  padding: clamp(28px, 5vw, 54px) clamp(20px, 4.5vw, 48px) clamp(24px, 4vw, 44px);
+  background:
+    radial-gradient(90% 60% at 50% 0%, rgba(255, 242, 168, 0.55), transparent 70%),
+    linear-gradient(180deg, var(--cream) 0%, #fff 60%, #fff3f8 100%);
+  border: 6px solid #fff;
+  border-radius: var(--radius-blob);
+  box-shadow: 0 0 0 12px rgba(255, 255, 255, 0.45), var(--shadow-card);
+  rotate: -1deg;
+  animation: card-drop 0.7s var(--ease-bounce) both;
+}
+
+/* A bow on the parcel and a sparkle in the corner: sticker trim, no images. */
+.won-card::before,
+.won-card::after {
+  position: absolute;
+  pointer-events: none;
+}
+
+.won-card::before {
+  content: "🎀";
+  top: -34px;
+  left: 50%;
+  font-size: 2.6rem;
+  transform: translateX(-50%) rotate(-8deg);
+  filter: drop-shadow(0 4px 6px rgba(91, 58, 83, 0.3));
+}
+
+.won-card::after {
+  content: "✨";
+  right: -14px;
+  bottom: -18px;
+  font-size: 2rem;
+  animation: sparkle-twinkle 2.4s ease-in-out infinite;
+}
+
+@keyframes sparkle-twinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+    scale: 0.85;
+  }
+  50% {
+    opacity: 1;
+    scale: 1.15;
+  }
+}
+
+@keyframes card-drop {
+  0% {
+    opacity: 0;
+    translate: 0 -28px;
+    scale: 0.94;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+.won-ribbon {
+  display: inline-block;
+  margin: 0 0 clamp(14px, 2.5vw, 22px);
+  padding: 8px 22px;
+  font-size: clamp(0.7rem, 2.2vw, 0.85rem);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #8a4f74;
+  background: linear-gradient(180deg, #fff 0%, var(--candy-sky) 100%);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-sticker);
+  rotate: 1.5deg;
+}
+
+.won-headline {
+  margin: 0;
+  font-size: clamp(1.9rem, 9vw, 4.4rem);
+}
+
+.won-headline .bubble-congrats {
+  font-size: 0.5em;
+  color: var(--lavender-deep);
+  letter-spacing: 0.01em;
+}
+
+.won-headline .bubble-won {
+  margin-top: 0.12em;
+  font-size: 1em;
+}
+
+.won-label {
+  margin: clamp(18px, 3vw, 28px) 0 6px;
+  font-size: clamp(0.85rem, 2.6vw, 1.05rem);
+  font-weight: 600;
+  color: #916b86;
+}
+
+.won-prize {
+  display: inline-block;
+  margin: 0;
+  padding: 10px 24px;
+  font-size: clamp(1rem, 3.4vw, 1.5rem);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  background: linear-gradient(180deg, #fff 0%, var(--candy-lemon) 100%);
+  border: 3px dashed var(--pink-deep);
+  border-radius: var(--radius-card);
+  box-shadow: 0 5px 0 rgba(255, 134, 187, 0.28);
+  rotate: -1.2deg;
+}
+
+.won-fineprint {
+  margin: clamp(16px, 2.5vw, 22px) 0 0;
+  font-size: clamp(0.68rem, 2vw, 0.8rem);
+  color: #a789a0;
+}
+
+/* --- Decoration. Pure CSS motion, no JS timers, nothing to clean up. ------ */
+
+.decor {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -12vh;
+  left: var(--x);
+  width: 14px;
+  height: 20px;
+  background: var(--candy-pink);
+  border-radius: 4px;
+  opacity: 1;
+  box-shadow: 0 2px 4px rgba(91, 58, 83, 0.12);
+  animation: confetti-fall 7.5s linear infinite;
+  animation-delay: var(--delay);
+}
+
+/* Colour wheel, cycled by position so the fall never looks striped. */
+.confetti-piece:nth-child(5n + 2) {
+  background: var(--candy-mint);
+}
+
+.confetti-piece:nth-child(5n + 3) {
+  background: var(--candy-lavender);
+}
+
+.confetti-piece:nth-child(5n + 4) {
+  background: var(--candy-lemon);
+}
+
+.confetti-piece:nth-child(5n + 5) {
+  background: var(--candy-sky);
+}
+
+.confetti-piece:nth-child(3n) {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+}
+
+.confetti-piece:nth-child(4n) {
+  width: 10px;
+  height: 24px;
+  animation-duration: 9.5s;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(125vh) rotate(calc(var(--spin) * 900deg));
+  }
+}
+
+.balloon {
+  position: absolute;
+  bottom: -34vh;
+  left: var(--x);
+  width: 76px;
+  height: 96px;
+  border-radius: 50% 50% 50% 50% / 46% 46% 54% 54%;
+  box-shadow: inset -10px -12px 22px rgba(91, 58, 83, 0.16), inset 12px 14px 20px rgba(255, 255, 255, 0.7);
+  opacity: 0.75;
+  animation: balloon-rise 19s linear infinite;
+  animation-delay: var(--delay);
+}
+
+/* The string, plus a knot at the base. */
+.balloon::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 2px;
+  height: 70px;
+  background: rgba(91, 58, 83, 0.25);
+  transform: translateX(-50%);
+}
+
+.balloon-pink {
+  background: var(--candy-pink);
+}
+
+.balloon-mint {
+  background: var(--candy-mint);
+}
+
+.balloon-lavender {
+  background: var(--candy-lavender);
+}
+
+.balloon-lemon {
+  background: var(--candy-lemon);
+}
+
+.balloon-sky {
+  background: var(--candy-sky);
+}
+
+@keyframes balloon-rise {
+  0% {
+    transform: translate(0, 0) rotate(-4deg);
+  }
+  50% {
+    transform: translate(26px, -70vh) rotate(5deg);
+  }
+  100% {
+    transform: translate(0, -140vh) rotate(-4deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .balloon {
+    width: 56px;
+    height: 72px;
+  }
+}
+
+/* Reduced motion keeps the party, it just stops moving: the confetti and the
+   balloons settle into a scattered still life instead of disappearing. */
+@media (prefers-reduced-motion: reduce) {
+  .won-card,
+  .won-card::after,
+  .confetti-piece,
+  .balloon {
+    animation: none;
+  }
+
+  .confetti-piece {
+    top: var(--y);
+    opacity: 0.75;
+  }
+
+  .balloon {
+    bottom: 6vh;
+  }
+}
 </style>
   </head>
   <body>
@@ -130,6 +635,186 @@ function createStore(initial) {
   return { getState, dispatch, subscribe };
 }
 
+// scripts/audio.js
+// Audio engine. Stub until T05 builds the real Web Audio version.
+// SPEC.md section 7. The shape is final: only the internals change.
+// Nothing here constructs an AudioContext, so the lazy-start rule holds.
+
+function createAudio() {
+  let started = false;
+  let muted = false;
+
+  return {
+    start() {
+      started = true;
+    },
+    setLevel() {},
+    setMuted(value) {
+      muted = Boolean(value);
+    },
+    isStarted: () => started,
+    isMuted: () => muted,
+    blip() {},
+    buzz() {},
+    holyPad() {},
+    stopMusic() {}
+  };
+}
+
+// scripts/screens/mute.js
+// The persistent mute toggle. SPEC.md section 5.1: present on every screen.
+// Mute genuinely works at every level, so this is never part of the prank.
+
+// Local transition: the spec's state table owns `muted`, nothing else touches it.
+function toggleMute(state) {
+  return { ...state, muted: !state.muted };
+}
+
+function renderMuteToggle(state, deps) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'mute-toggle';
+  button.dataset.action = 'mute';
+  button.textContent = state.muted ? '🔇' : '🔊';
+  button.setAttribute('aria-pressed', String(state.muted));
+  button.setAttribute('aria-label', state.muted ? 'Unmute sound' : 'Mute sound');
+  button.title = state.muted ? 'Sound off' : 'Sound on';
+
+  button.addEventListener('click', () => {
+    deps.audio.setMuted(!state.muted);
+    deps.dispatch(toggleMute);
+  });
+
+  return button;
+}
+
+// scripts/screens/won.js
+// You Won screen. SPEC.md section 5.1.
+// The sincere one. At level 1 this has to read as a real, sweet prize page.
+// All decoration is CSS animation, so nothing leaks when the screen unmounts.
+
+
+// One absurd prize per loop, escalating. SPEC.md section 5.1.
+const PRIZES = [
+  'A 2024 SUPER YACHT',
+  'ONE (1) FREE SANDWICH',
+  'A LIFETIME SUPPLY OF WEDNESDAYS',
+  'THE ENTIRE MOON',
+  'A SLIGHTLY USED HELICOPTER',
+  'YOUR NEIGHBOUR’S DOG (LEGALLY)',
+  'ONE MILLION IMAGINARY DOLLARS',
+  'EVERYTHING. LITERALLY EVERYTHING.'
+];
+
+function prizeFor(level) {
+  const clamped = Math.min(Math.max(Math.trunc(level) || 1, 1), MAX_LEVEL);
+  return PRIZES[clamped - 1];
+}
+
+const CONFETTI_COUNT = 40;
+const BALLOON_TINTS = ['pink', 'mint', 'lavender', 'lemon', 'sky'];
+
+// Claiming both advances the state machine and records that the AudioContext
+// now exists, so a later reset() can keep the running engine.
+const claimAndStart = (state) => ({ ...claim(state), audioStarted: true });
+
+// Fake bubble type: one span per letter so CSS can nudge each one. The
+// element's textContent stays the plain word.
+function bubbleWord(text, className) {
+  const word = document.createElement('span');
+  word.className = `bubble ${className}`;
+
+  [...text].forEach((character, index) => {
+    const letter = document.createElement('span');
+    letter.className = 'bubble-letter';
+    letter.style.setProperty('--i', String(index));
+    letter.textContent = character;
+    word.append(letter);
+  });
+
+  return word;
+}
+
+// Confetti and balloons. Positions and offsets are baked in as custom
+// properties once; the motion itself is pure CSS, never a JS timer.
+// Delays are negative so every loop is already mid-flight on first paint.
+function wonDecoration() {
+  const decor = document.createElement('div');
+  decor.className = 'decor';
+  decor.setAttribute('aria-hidden', 'true');
+
+  for (let index = 0; index < CONFETTI_COUNT; index += 1) {
+    const piece = document.createElement('i');
+    piece.className = 'confetti-piece';
+    piece.style.setProperty('--x', `${(index * 97) % 100}%`);
+    piece.style.setProperty('--y', `${4 + ((index * 37) % 88)}%`);
+    piece.style.setProperty('--delay', `-${(index % 15) * 0.5}s`);
+    piece.style.setProperty('--spin', `${index % 2 ? 1 : -1}`);
+    decor.append(piece);
+  }
+
+  BALLOON_TINTS.forEach((tint, index) => {
+    const balloon = document.createElement('i');
+    balloon.className = `balloon balloon-${tint}`;
+    balloon.style.setProperty('--x', `${8 + index * 21}%`);
+    balloon.style.setProperty('--delay', `-${index * 3.6}s`);
+    decor.append(balloon);
+  });
+
+  return decor;
+}
+
+function wonCard(state, deps) {
+  const card = document.createElement('main');
+  card.className = 'won-card';
+
+  const ribbon = document.createElement('p');
+  ribbon.className = 'won-ribbon';
+  ribbon.textContent = '✨ OFFICIAL WINNER NOTICE ✨';
+
+  const headline = document.createElement('h1');
+  headline.className = 'won-headline';
+  headline.append(
+    bubbleWord('CONGRATULATIONS', 'bubble-congrats'),
+    bubbleWord('YOU WON!!', 'bubble-won')
+  );
+
+  const label = document.createElement('p');
+  label.className = 'won-label';
+  label.textContent = 'You are today’s lucky winner of';
+
+  const prize = document.createElement('p');
+  prize.className = 'won-prize';
+  prize.textContent = prizeFor(state.level);
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'claim-button';
+  button.dataset.action = 'claim';
+  button.textContent = 'CLAIM PRIZE \u{1F381}';
+  button.addEventListener('click', () => {
+    if (!deps.audio.isStarted()) deps.audio.start();
+    deps.audio.blip();
+    deps.dispatch(claimAndStart);
+  });
+
+  const fineprint = document.createElement('p');
+  fineprint.className = 'won-fineprint';
+  fineprint.textContent = 'No purchase necessary. One quick verification and it is yours!';
+
+  card.append(ribbon, headline, label, prize, button, fineprint);
+  return card;
+}
+
+function renderWon(root, state, deps) {
+  const screen = document.createElement('div');
+  screen.className = 'screen screen-won';
+
+  screen.append(wonDecoration(), wonCard(state, deps), renderMuteToggle(state, deps));
+  root.replaceChildren(screen);
+  return screen;
+}
+
 // scripts/screens/placeholder.js
 // Stand-in body for screens that later tasks build for real.
 // Renders nothing but the screen name so the router is testable today.
@@ -140,14 +825,6 @@ function renderPlaceholder(root, name) {
   node.textContent = name;
   root.replaceChildren(node);
   return node;
-}
-
-// scripts/screens/won.js
-// You Won screen. Placeholder until T03. SPEC.md section 5.1.
-
-
-function renderWon(root) {
-  return renderPlaceholder(root, 'won');
 }
 
 // scripts/screens/captcha.js
@@ -177,17 +854,19 @@ const SCREENS = {
 };
 
 // The router is deliberately dumb: read state.screen, call the matching
-// renderer, nothing else.
-function createRouter(root, store) {
-  const render = (state) => SCREENS[state.screen](root, state, store);
+// renderer, nothing else. `deps` carries everything a screen may not build for
+// itself, so tests can inject stubs.
+function createRouter(root, store, deps) {
+  const render = (state) => SCREENS[state.screen](root, state, deps);
   const unsubscribe = store.subscribe(render);
   render(store.getState());
   return unsubscribe;
 }
 
-function start(root) {
+function start(root, options = {}) {
+  const audio = options.audio || createAudio();
   const store = createStore(createState());
-  createRouter(root, store);
+  createRouter(root, store, { dispatch: store.dispatch, audio });
   return store;
 }
 
