@@ -498,8 +498,9 @@ body.fx-overdrive .won-card {
 }
 
 /* --- Mascot hooks ---------------------------------------------------------
-   The mascot itself is T06. These blocks only reserve the degradation, so the
-   flags mean something the moment it lands. */
+   The mascot is drawn in mascot.css. These blocks are the flag half of the
+   degradation: it appears, its eyes drift, its voice sours, its smile flips,
+   and finally its text stops being text. */
 
 body.fx-mascot .mascot {
   opacity: 1;
@@ -519,7 +520,7 @@ body.fx-mascotSnark .mascot-speech {
 }
 
 body.fx-mascotInvert .mascot-mouth {
-  rotate: 180deg;
+  transform: scaleY(-1);
 }
 
 body.fx-mascotCorrupt .mascot-speech {

@@ -2,6 +2,19 @@
 
 Newest entries at the top. Times are EDT.
 
+## T06 — Degrading mascot
+
+**2026-07-26 7:22 PM EDT**
+
+- Added `tests/mascot.test.js` (20 tests) covering `mascotStateFor(1)` being exactly `{ visible: false }`, visibility on levels 2 through 8, the mood progression sweet (2-3), snark (4-5), broken (6-7), corrupt (8), each state carrying its own pool, purity and out-of-range clamping, four non-empty pools with no line shared between moods, glitch characters in every corrupt line and none in any sweet line, no em-dashes anywhere in the pools, `mascotMessage` wrapping around its pool and returning an empty string at level 1, `renderMascot` rendering nothing at level 1 and a `.mascot` node from level 2, the body parts the chaos flags target being present, the spoken line always coming from the current mood pool, re-rendering replacing rather than stacking so only one mascot is ever in the DOM, the mascot disappearing when the level drops back to 1, `aria-hidden` on the widget, and a stylesheet audit that `.mascot` carries `pointer-events: none` and nothing re-enables them.
+- Added `src/scripts/mascot.js` with `MASCOT_MESSAGES`, the pure `mascotStateFor(level)` and `mascotMessage(level, beat)`, and `renderMascot(root, level)`. Four pools of eight lines each: sincere encouragement, then passive-aggression, then a mascot reporting its own condition in lower case, then struck-through zalgo, block characters, fullwidth text and replacement characters. A module level beat counter walks the pool, so the mascot says something new on every claim, every rejection, and every loop.
+- Added `src/styles/mascot.css`: a CSS-drawn blob with a gradient body, a tuft, two eyes with glints, hidden brows, blush ovals, and a mouth built from the bottom half of a ring, plus a speech bubble with a tail. Degradation is keyed off the chaos flags only, never off the level: `fx-eyeDrift` slows one eye's transition so it lags behind the other, `fx-mascotSnark` brings the brows in, kills the glint, drains the colour and flattens the smile, `fx-mascotInvert` flips the mouth and sags the body, and `fx-mascotCorrupt` detaches the eyes and mouth into stepped jitter and hue-rotates the body.
+- Changed the reserved `fx-mascotInvert` hook in `chaos.css` from `rotate: 180deg` to `transform: scaleY(-1)`, which is why no part of the mascot drawing uses `transform` for its own positioning.
+- Mounted the mascot from the router in `main.js` rather than from a screen, so it is persistent chrome and follows the visitor from You Won into the CAPTCHA shell that lands in T07.
+- Held to the hard rule from SPEC section 4: the whole widget is `pointer-events: none` and sits in the bottom left corner, clear of the CLAIM button, the mute toggle, and the coming skip link. Below 560px the bubble stacks above the blob and both shrink and hug the left edge, and below 520px of height the bubble is dropped entirely so the corner can never crowd the card.
+- Reduced motion keeps every stage of the decline and only stops the twitching: the corrupt mascot holds a static broken pose instead of jittering.
+- Rebuilt `dist/index.html`, still a single file with zero external references. Screenshotted the built page in headless Chrome at levels 1 through 8 at 390px and 1200px in both motion modes: no mascot at all on loop 1, a beaming blob on loop 2, drifting eyes on loop 3, brows and a flat mouth on loop 4, a frown on loop 6, and a green detached mess on loop 8, with the card and the controls unobstructed at every step.
+
 ## T05 — Web Audio engine
 
 **2026-07-26 7:08 PM EDT**

@@ -4,6 +4,7 @@ import { createState } from './state.js';
 import { createStore } from './store.js';
 import { createAudio } from './audio.js';
 import { applyChaos } from './chaos.js';
+import { renderMascot } from './mascot.js';
 import { renderWon } from './screens/won.js';
 import { renderCaptcha } from './screens/captcha.js';
 import { renderGate } from './screens/gate.js';
@@ -19,12 +20,16 @@ const SCREENS = {
 // everything a screen may not build for itself, so tests can inject stubs.
 // Chaos runs first so a screen renders straight into the right body classes,
 // and no screen ever has to know that chaos exists. The audio level is pushed
-// the same way, so the music sours in step with the visuals.
+// the same way, so the music sours in step with the visuals. The mascot is
+// persistent chrome rather than a screen, so it is mounted after whichever
+// screen just rendered and follows the visitor from You Won into the CAPTCHA.
 export function createRouter(root, store, deps) {
   const render = (state) => {
     applyChaos(root.ownerDocument || document, state.level);
     deps.audio.setLevel(state.level);
-    return SCREENS[state.screen](root, state, deps);
+    const screen = SCREENS[state.screen](root, state, deps);
+    renderMascot(root, state.level);
+    return screen;
   };
   const unsubscribe = store.subscribe(render);
   render(store.getState());

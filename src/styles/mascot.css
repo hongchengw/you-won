@@ -1,0 +1,421 @@
+/* The mascot. SPEC.md section 4 (mascot flags) and section 5.
+
+   Drawn entirely in CSS: a rounded blob body, two eyes, brows, a mouth arc, and
+   blush circles. Level 1 never renders it at all. From level 2 the chaos flags
+   take it apart one stage at a time.
+
+   Hard rule from SPEC section 4: it never covers a control. The whole widget is
+   `pointer-events: none`, it lives in the bottom left corner away from the
+   CLAIM button, the mute toggle, and the skip link, and it shrinks on small
+   viewports so it stays out of the card at 390px. */
+
+.mascot {
+  position: fixed;
+  left: clamp(10px, 2.5vw, 26px);
+  bottom: clamp(10px, 2.5vw, 26px);
+  z-index: 12;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: min(360px, 62vw);
+  /* Decoration only: every click goes straight through to whatever is under it. */
+  pointer-events: none;
+  /* chaos.css raises this to 1 with `fx-mascot`, so it fades in at loop 2. */
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+/* --- Body ----------------------------------------------------------------- */
+
+.mascot-body {
+  position: relative;
+  flex: none;
+  width: 92px;
+  height: 84px;
+  background:
+    radial-gradient(70% 60% at 32% 26%, rgba(255, 255, 255, 0.95), transparent 70%),
+    linear-gradient(180deg, var(--cream) 0%, var(--candy-sky) 100%);
+  border: 4px solid #fff;
+  border-radius: 52% 48% 46% 54% / 58% 56% 44% 42%;
+  box-shadow: var(--shadow-sticker);
+  animation: mascot-breathe 3.4s var(--ease-bounce) infinite;
+}
+
+/* A little tuft, so the blob reads as a creature rather than a stone. */
+.mascot-body::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 10px;
+  height: 16px;
+  margin-left: -5px;
+  background: var(--candy-pink);
+  border: 3px solid #fff;
+  border-radius: 50% 50% 40% 40%;
+}
+
+@keyframes mascot-breathe {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1 1;
+  }
+  50% {
+    translate: 0 -5px;
+    scale: 1.03 0.97;
+  }
+}
+
+.mascot-eye {
+  position: absolute;
+  top: 28px;
+  width: 13px;
+  height: 16px;
+  background: var(--ink);
+  border-radius: 50%;
+  transition: translate 0.5s var(--ease-bounce), rotate 0.5s ease;
+}
+
+/* The glint. Removed at `fx-mascotSnark`, which is most of the mood change. */
+.mascot-eye::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 5px;
+  height: 5px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.mascot-eye-left {
+  left: 20px;
+}
+
+.mascot-eye-right {
+  right: 20px;
+}
+
+.mascot-brow {
+  position: absolute;
+  top: 19px;
+  width: 16px;
+  height: 4px;
+  background: var(--ink);
+  border-radius: var(--radius-pill);
+  opacity: 0;
+  transition: opacity 0.4s ease, rotate 0.4s ease;
+}
+
+.mascot-brow-left {
+  left: 18px;
+}
+
+.mascot-brow-right {
+  right: 18px;
+}
+
+.mascot-blush {
+  position: absolute;
+  top: 42px;
+  width: 15px;
+  height: 10px;
+  background: var(--candy-pink);
+  border-radius: 50%;
+  opacity: 0.85;
+}
+
+.mascot-blush-left {
+  left: 9px;
+}
+
+.mascot-blush-right {
+  right: 9px;
+}
+
+/* A smile: the bottom half of a ring. `fx-mascotInvert` flips it with
+   scaleY(-1), which is why nothing else here uses `transform`. */
+.mascot-mouth {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  width: 26px;
+  height: 13px;
+  margin-left: -13px;
+  border: 3px solid var(--ink);
+  border-top: none;
+  border-radius: 0 0 26px 26px;
+  transition: rotate 0.4s ease;
+}
+
+/* --- Speech bubble -------------------------------------------------------- */
+
+.mascot-speech {
+  position: relative;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: left;
+  color: var(--ink);
+  background: var(--cream);
+  border: 3px solid #fff;
+  border-radius: 16px 16px 16px 4px;
+  box-shadow: var(--shadow-sticker);
+  animation: mascot-pop 0.45s var(--ease-bounce) both;
+}
+
+/* The tail, pointing down and left at the blob. */
+.mascot-speech::after {
+  content: "";
+  position: absolute;
+  bottom: -11px;
+  left: 12px;
+  width: 0;
+  height: 0;
+  border-top: 12px solid var(--cream);
+  border-right: 12px solid transparent;
+}
+
+@keyframes mascot-pop {
+  0% {
+    opacity: 0;
+    scale: 0.8;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* --- Degradation ----------------------------------------------------------
+   Keyed off the chaos flags, never off the level. chaos.css owns the drift
+   offsets, the snark colour, the mouth flip, and the corrupt type; these blocks
+   carry the rest of each stage. */
+
+/* Level 3: one eye lags behind the other, which is quietly awful. */
+body.fx-eyeDrift .mascot-eye-right {
+  transition-duration: 1.6s;
+}
+
+/* Level 4: brows arrive, the glint goes, the colour drains. */
+body.fx-mascotSnark .mascot-brow {
+  opacity: 1;
+}
+
+body.fx-mascotSnark .mascot-brow-left {
+  rotate: 16deg;
+}
+
+body.fx-mascotSnark .mascot-brow-right {
+  rotate: -16deg;
+}
+
+body.fx-mascotSnark .mascot-eye::after {
+  opacity: 0;
+}
+
+body.fx-mascotSnark .mascot-body {
+  filter: saturate(0.5);
+}
+
+body.fx-mascotSnark .mascot-blush {
+  opacity: 0.35;
+}
+
+/* The smile flattens into a line before it ever inverts. */
+body.fx-mascotSnark .mascot-mouth {
+  height: 5px;
+  width: 22px;
+  margin-left: -11px;
+}
+
+/* Level 6: the smile inverts (chaos.css) and the whole thing sags. */
+body.fx-mascotInvert .mascot-body {
+  filter: saturate(0.3) brightness(0.92);
+  border-radius: 48% 52% 58% 42% / 46% 44% 58% 60%;
+  animation-duration: 6.5s;
+}
+
+body.fx-mascotInvert .mascot-eye {
+  height: 12px;
+  rotate: 8deg;
+}
+
+body.fx-mascotInvert .mascot-speech {
+  border-radius: 4px;
+}
+
+/* Level 8: the features detach and jitter and the body loses its hue. */
+body.fx-mascotCorrupt .mascot-body {
+  animation: mascot-corrupt-body calc(1.1s * var(--fx-speed)) steps(2, end) infinite;
+}
+
+body.fx-mascotCorrupt .mascot-eye-left {
+  animation: mascot-corrupt-eye calc(0.42s * var(--fx-speed)) steps(2, end) infinite;
+}
+
+body.fx-mascotCorrupt .mascot-eye-right {
+  animation: mascot-corrupt-eye calc(0.31s * var(--fx-speed)) steps(2, end) infinite reverse;
+}
+
+body.fx-mascotCorrupt .mascot-mouth {
+  animation: mascot-corrupt-mouth calc(0.7s * var(--fx-speed)) steps(2, end) infinite;
+}
+
+/* The strike marks need room, otherwise the line reads as a solid bar. */
+body.fx-mascotCorrupt .mascot-speech {
+  letter-spacing: 0.06em;
+  word-spacing: 0.2em;
+}
+
+body.fx-mascotCorrupt .mascot-blush {
+  opacity: 0.9;
+  background: #ff004c;
+}
+
+@keyframes mascot-corrupt-body {
+  0%,
+  100% {
+    filter: hue-rotate(0deg) contrast(1.1);
+    translate: 0 0;
+  }
+  50% {
+    filter: hue-rotate(200deg) contrast(1.5);
+    translate: 3px -2px;
+  }
+}
+
+@keyframes mascot-corrupt-eye {
+  0%,
+  100% {
+    translate: -9px 6px;
+  }
+  50% {
+    translate: 11px -8px;
+  }
+}
+
+@keyframes mascot-corrupt-mouth {
+  0%,
+  100% {
+    translate: 5px 7px;
+    rotate: -12deg;
+  }
+  50% {
+    translate: -7px -4px;
+    rotate: 14deg;
+  }
+}
+
+/* --- Responsive -----------------------------------------------------------
+   At 390px the card fills the width, so the mascot shrinks and the bubble
+   stacks above the blob rather than reaching toward the middle of the screen. */
+
+@media (max-width: 560px) {
+  .mascot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    max-width: 58vw;
+  }
+
+  .mascot-speech {
+    margin-bottom: 8px;
+    font-size: 0.68rem;
+  }
+
+  .mascot-body {
+    width: 68px;
+    height: 62px;
+  }
+
+  .mascot-eye {
+    top: 20px;
+    width: 10px;
+    height: 12px;
+  }
+
+  .mascot-eye-left {
+    left: 14px;
+  }
+
+  .mascot-eye-right {
+    right: 14px;
+  }
+
+  .mascot-brow {
+    top: 13px;
+    width: 12px;
+  }
+
+  .mascot-brow-left {
+    left: 13px;
+  }
+
+  .mascot-brow-right {
+    right: 13px;
+  }
+
+  .mascot-blush {
+    top: 31px;
+    width: 11px;
+    height: 8px;
+  }
+
+  .mascot-blush-left {
+    left: 6px;
+  }
+
+  .mascot-blush-right {
+    right: 6px;
+  }
+
+  .mascot-mouth {
+    top: 36px;
+    width: 19px;
+    height: 10px;
+    margin-left: -9.5px;
+  }
+}
+
+/* Short viewports have no room for a bubble in the corner: keep the blob and
+   drop the speech, so nothing is pushed over the card. */
+@media (max-height: 520px) {
+  .mascot-speech {
+    display: none;
+  }
+}
+
+/* Reduced motion keeps every stage of the decline, it just stops it twitching.
+   The corrupt mascot holds a static broken pose instead of jittering. */
+@media (prefers-reduced-motion: reduce) {
+  .mascot-body,
+  .mascot-speech,
+  body.fx-mascotCorrupt .mascot-body,
+  body.fx-mascotCorrupt .mascot-eye-left,
+  body.fx-mascotCorrupt .mascot-eye-right,
+  body.fx-mascotCorrupt .mascot-mouth {
+    animation: none;
+  }
+
+  body.fx-mascotCorrupt .mascot-body {
+    filter: hue-rotate(200deg) contrast(1.4);
+  }
+
+  body.fx-mascotCorrupt .mascot-eye-left {
+    translate: -9px 6px;
+  }
+
+  body.fx-mascotCorrupt .mascot-eye-right {
+    translate: 11px -8px;
+  }
+
+  body.fx-mascotCorrupt .mascot-mouth {
+    translate: 5px 7px;
+    rotate: -12deg;
+  }
+}
