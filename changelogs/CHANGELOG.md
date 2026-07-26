@@ -2,6 +2,20 @@
 
 Newest entries at the top. Times are EDT.
 
+## T05 — Web Audio engine
+
+**2026-07-26 7:08 PM EDT**
+
+- Added `tests/audio.test.js` (15 tests) driven by an injected fake `AudioContext` constructor that records every context, oscillator, gain, filter and param automation. Covers `createAudio()` constructing nothing and `isStarted()` being false before the first click, `start()` building exactly one context however often it is called, the melody firing more notes per second at level 8 than at level 1, the peak detune growing with the level, mute ramping the master gain to 0 and unmute restoring it, mute holding at 0 at level 8 with SFX firing, `isMuted()` tracking the last `setMuted`, `blip`/`buzz`/`holyPad`/`stopMusic`/`setLevel` being safe no-ops before `start()`, `buzz()` using a sawtooth in a lower band than the `blip()` sine, `holyPad()` killing the melody before the pad voices come in and no melody note arriving afterwards, `stopMusic()` silencing the loop while leaving the context open and running, monotonic `tempoFor`/`detuneFor` across levels 1-8 with clamping, and the router pushing `setLevel(state.level)` on every render.
+- Replaced the `src/scripts/audio.js` stub with the real engine. One master gain feeds the destination and a music bus feeds the master, so mute has a single honest knob and SFX stay audible after the melody stops.
+- Melody: a 16 note toy phrase in C major over `MELODY_ROOT` C5, one throwaway oscillator plus gain envelope per note, rescheduled with `setTimeout` at `tempoFor(level)`. `tempoFor` runs 0.26s per note at level 1 down to 0.106s at level 8, and `detuneFor` runs 0 cents at level 1 up to 84 cents at level 8 applied through a fixed per-note shape so the tune wobbles sharp and flat rather than transposing. The wave switches from triangle to square at level 4, so it goes from music box to cheap broken toy.
+- SFX: `blip()` is a short 880Hz sine pluck on button presses, `buzz()` is a harsh 110Hz sawtooth burst for rejections, both routed past the music bus straight into the master.
+- `holyPad()` stops the melody first, then swells a four voice C major chord on alternating sine and triangle oscillators with a 1.6s attack and a 6.5s release, ready for the T10 gate scene. `stopMusic()` only clears the loop timer and never touches the context, so nothing has to be rebuilt afterwards.
+- Mute rides a 60ms linear ramp on the master gain and never calls `suspend()`, so SFX timing stays sane and unmuting is instant. It works identically at every level including 8.
+- Wired `deps.audio.setLevel(state.level)` into the router in `main.js` right after `applyChaos`, so the music sours in step with the visuals, and left `buzz()` on the shared `deps.audio` for the T07 CAPTCHA shell.
+- Total output stays conservative: master gain 0.16 with per voice envelopes below that. The app is already annoying.
+- Rebuilt `dist/index.html`, still a single file with zero external references. Smoke tested the built bundle with a stubbed constructor: zero AudioContexts on load, exactly one after the CLAIM click, and the melody scheduling notes immediately afterwards.
+
 ## T04 — Chaos engine, levels 1-8
 
 **2026-07-26 7:01 PM EDT**

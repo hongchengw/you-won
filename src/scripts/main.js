@@ -18,10 +18,12 @@ const SCREENS = {
 // state.screen, call the matching renderer, nothing else. `deps` carries
 // everything a screen may not build for itself, so tests can inject stubs.
 // Chaos runs first so a screen renders straight into the right body classes,
-// and no screen ever has to know that chaos exists.
+// and no screen ever has to know that chaos exists. The audio level is pushed
+// the same way, so the music sours in step with the visuals.
 export function createRouter(root, store, deps) {
   const render = (state) => {
     applyChaos(root.ownerDocument || document, state.level);
+    deps.audio.setLevel(state.level);
     return SCREENS[state.screen](root, state, deps);
   };
   const unsubscribe = store.subscribe(render);
