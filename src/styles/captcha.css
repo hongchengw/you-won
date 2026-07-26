@@ -1,1 +1,375 @@
-/* CAPTCHA shell and challenge bodies. Filled in by T07. */
+/* CAPTCHA shell. SPEC.md sections 5.2 and 6.
+
+   The joke is the clash. Everything else on the page is candy; this is a grey
+   corporate security widget with a fake trademark, a monospace session id, and
+   fine print nobody reads, sitting in the middle of a children's party.
+
+   Hard rule from SPEC section 4: `.captcha-skip` stays visible, hit-testable
+   and clickable at every level in both motion modes. */
+
+.screen-captcha {
+  overflow: hidden;
+}
+
+/* --- The widget ----------------------------------------------------------- */
+
+.captcha-card {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 0;
+  width: min(520px, 100%);
+  padding: 0 0 18px;
+  text-align: left;
+  color: #26313d;
+  background: #f4f6f8;
+  border: 1px solid #c6ced6;
+  /* Square corners and a flat drop shadow: nothing here is rounded or sweet. */
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(16, 24, 32, 0.28), 0 18px 40px rgba(91, 58, 83, 0.3);
+  animation: captcha-in 0.28s ease-out both;
+}
+
+@keyframes captcha-in {
+  0% {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.captcha-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  background: linear-gradient(180deg, #3a4653 0%, #26303a 100%);
+  border-radius: 3px 3px 0 0;
+}
+
+/* The fake logo: a shield with a tick, drawn in CSS so the build stays
+   dependency free and file:// clean. */
+.captcha-logo {
+  position: relative;
+  flex: none;
+  width: 24px;
+  height: 27px;
+  background: linear-gradient(180deg, #4da3ff 0%, #1b6fd1 100%);
+  clip-path: polygon(50% 0%, 100% 18%, 100% 62%, 50% 100%, 0% 62%, 0% 18%);
+}
+
+.captcha-logo::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 8px;
+  height: 13px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(42deg);
+}
+
+.captcha-brand {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #e8eef5;
+}
+
+.captcha-heading {
+  margin: 0 0 0 auto;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #9fb2c6;
+}
+
+.captcha-badge {
+  padding: 3px 8px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #063;
+  background: #7ee2a8;
+  border-radius: 2px;
+}
+
+.captcha-meta {
+  margin: 0;
+  padding: 6px 14px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.03em;
+  color: #6b7b8c;
+  background: #e6eaee;
+  border-bottom: 1px solid #ccd4dc;
+}
+
+.captcha-title {
+  margin: 16px 14px 2px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.captcha-instruction {
+  margin: 0 14px 14px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: #4a5865;
+}
+
+.captcha-body {
+  margin: 0 14px;
+  min-height: 96px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+/* --- Rejections ----------------------------------------------------------- */
+
+.captcha-error {
+  /* Reserved whether or not there is a message, so nothing jumps on rejection. */
+  min-height: 1.2em;
+  margin: 10px 14px 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #c62828;
+}
+
+.captcha-error:not(:empty) {
+  animation: captcha-error-in 0.22s ease-out both;
+}
+
+.captcha-error-final {
+  color: #26313d;
+  letter-spacing: 0.04em;
+}
+
+@keyframes captcha-error-in {
+  0% {
+    translate: -4px 0;
+  }
+  40% {
+    translate: 4px 0;
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+
+.captcha-note {
+  margin: 2px 14px 0;
+  font-size: 0.74rem;
+  color: #8a5b16;
+}
+
+.captcha-note:empty {
+  display: none;
+}
+
+/* --- Actions -------------------------------------------------------------- */
+
+.captcha-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 14px 0;
+}
+
+.captcha-attempts {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.63rem;
+  letter-spacing: 0.08em;
+  color: #7c8b99;
+}
+
+.captcha-verify {
+  padding: 9px 26px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: linear-gradient(180deg, #3d8ee0 0%, #1c6ec4 100%);
+  border: 1px solid #17599e;
+  border-radius: 3px;
+  transition: filter 0.12s ease;
+}
+
+.captcha-verify:hover {
+  filter: brightness(1.08);
+}
+
+.captcha-verify:active {
+  filter: brightness(0.92);
+}
+
+.captcha-verify:disabled {
+  cursor: default;
+  filter: grayscale(1) opacity(0.6);
+}
+
+.captcha-verify:focus-visible,
+.captcha-skip:focus-visible {
+  outline: 2px solid #1c6ec4;
+  outline-offset: 2px;
+}
+
+.captcha-fineprint {
+  margin: 12px 14px 0;
+  font-size: 0.6rem;
+  line-height: 1.45;
+  color: #93a0ac;
+}
+
+/* --- Skip link ------------------------------------------------------------
+   The only way out. Small and low contrast so it reads as an admission of
+   defeat rather than a button, but it is a real button with a real hit area
+   and it is never allowed to become unreachable. */
+
+.captcha-skip {
+  justify-self: end;
+  margin: 8px 12px 0;
+  /* Padding is the hit area. Keep it generous even though the text is tiny. */
+  padding: 8px 10px;
+  font-size: 0.68rem;
+  color: #8d99a5;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  animation: captcha-skip-in 0.9s ease-out both;
+}
+
+.captcha-skip:hover {
+  color: #46535f;
+}
+
+.captcha-skip[hidden] {
+  display: none;
+}
+
+@keyframes captcha-skip-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.85;
+  }
+}
+
+/* --- Stub challenge body --------------------------------------------------
+   Replaced by the real eight in T08 and T09. */
+
+.stub-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  font-size: 0.86rem;
+  cursor: pointer;
+  background: #f8fafb;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.stub-check-input {
+  width: 22px;
+  height: 22px;
+  accent-color: #1c6ec4;
+}
+
+/* --- Chaos overrides ------------------------------------------------------
+   The widget is the last thing on the page still pretending to be serious, so
+   it loses its composure a level later than everything else. */
+
+body.fx-comicSans .captcha-meta,
+body.fx-comicSans .captcha-attempts {
+  font-family: "Consolas", "Courier New", monospace;
+}
+
+body.fx-neon .captcha-card {
+  color: #f2f6ff;
+  background: #1b1030;
+  border-color: var(--candy-pink);
+}
+
+body.fx-neon .captcha-body {
+  color: #1b1030;
+}
+
+body.fx-neon .captcha-instruction,
+body.fx-neon .captcha-fineprint,
+body.fx-neon .captcha-attempts {
+  color: #d9c2ff;
+}
+
+/* Under fx-dodge the link drifts, but only inside a bounded box that keeps it
+   over the card and comfortably larger than the pointer. chaos.js may also
+   nudge it once, and `.fx-dodged` turns this animation off when it does. */
+body.fx-dodge .captcha-skip {
+  animation:
+    captcha-skip-in 0.9s ease-out both,
+    captcha-skip-drift 7s ease-in-out 0.9s infinite;
+}
+
+@keyframes captcha-skip-drift {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: -14px -6px;
+  }
+  50% {
+    translate: 10px 4px;
+  }
+  75% {
+    translate: -6px 5px;
+  }
+}
+
+/* Once the card goes dark the link stops hiding. It is the only exit and it has
+   to survive strobe, invert and spin, so from here contrast goes up, not down.
+   Keyed off fx-neon rather than fx-overdrive because fx-neon is not a motion
+   flag: this has to hold in reduced motion too. */
+body.fx-neon .captcha-skip {
+  color: #26313d;
+  background: #fff;
+  box-shadow: 0 0 0 1px #26313d;
+}
+
+@media (max-width: 420px) {
+  .captcha-heading {
+    display: none;
+  }
+
+  /* The heading carried the spacer, so the badge takes it over. */
+  .captcha-badge {
+    margin-left: auto;
+  }
+
+  .captcha-meta {
+    font-size: 0.54rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .captcha-card,
+  .captcha-error:not(:empty),
+  body.fx-dodge .captcha-skip {
+    animation: none;
+  }
+
+  .captcha-skip {
+    animation: none;
+    opacity: 0.85;
+  }
+}
