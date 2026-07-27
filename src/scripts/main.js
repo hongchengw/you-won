@@ -6,7 +6,8 @@ import { createAudio } from './audio.js';
 import { applyChaos } from './chaos.js';
 import { renderMascot } from './mascot.js';
 import { renderWon } from './screens/won.js';
-import { renderCaptcha, runCaptchaCleanup } from './screens/captcha.js';
+import { runCleanup } from './cleanup.js';
+import { renderCaptcha } from './screens/captcha.js';
 import { renderGate } from './screens/gate.js';
 
 const SCREENS = {
@@ -23,11 +24,12 @@ const SCREENS = {
 // the same way, so the music sours in step with the visuals. The mascot is
 // persistent chrome rather than a screen, so it is mounted after whichever
 // screen just rendered and follows the visitor from You Won into the CAPTCHA.
-// The CAPTCHA cleanup registry is drained first: challenge modules park their
-// timers and pointer listeners there, and none of them may survive the swap.
+// The cleanup registry is drained first: challenge modules and the gate scene
+// park their timers and pointer listeners there, and none of them may survive
+// the swap.
 export function createRouter(root, store, deps) {
   const render = (state) => {
-    runCaptchaCleanup();
+    runCleanup();
     applyChaos(root.ownerDocument || document, state.level);
     deps.audio.setLevel(state.level);
     const screen = SCREENS[state.screen](root, state, deps);

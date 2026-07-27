@@ -4,7 +4,8 @@ import distortedTextCaptcha, { distortedTextFor } from '../src/scripts/captchas/
 import timerCaptcha, { timerValueFor } from '../src/scripts/captchas/timer.js';
 import rotateCaptcha, { ROTATE_REJECTION } from '../src/scripts/captchas/rotate.js';
 import { CAPTCHA_MODULES } from '../src/scripts/captchas/index.js';
-import { renderCaptcha, runCaptchaCleanup } from '../src/scripts/screens/captcha.js';
+import { renderCaptcha } from '../src/scripts/screens/captcha.js';
+import { runCleanup } from '../src/scripts/cleanup.js';
 import { createState } from '../src/scripts/state.js';
 import { createStore } from '../src/scripts/store.js';
 
@@ -126,7 +127,7 @@ function mountShell(level) {
   const deps = { dispatch: store.dispatch, audio: stubAudio(), captchas: CAPTCHA_MODULES };
 
   store.subscribe((state) => {
-    runCaptchaCleanup();
+    runCleanup();
     if (state.screen === 'captcha') renderCaptcha(root, state, deps);
   });
   renderCaptcha(root, store.getState(), deps);
@@ -136,12 +137,12 @@ function mountShell(level) {
 
 beforeEach(() => {
   document.body.replaceChildren();
-  runCaptchaCleanup();
+  runCleanup();
 });
 
 afterEach(() => {
   drainMounted();
-  runCaptchaCleanup();
+  runCleanup();
   vi.useRealTimers();
   vi.restoreAllMocks();
 });

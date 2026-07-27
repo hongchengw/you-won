@@ -10,6 +10,7 @@
 // may never make it unreachable.
 
 import { fail, skip, captchaFor, canSkip } from '../state.js';
+import { registerCleanup } from '../cleanup.js';
 import { CAPTCHA_MODULES } from '../captchas/index.js';
 import { renderMuteToggle } from './mute.js';
 
@@ -47,22 +48,9 @@ export function sessionCode(level, fails) {
   return `VH-${seed.toString(16).toUpperCase().padStart(5, '0')}`;
 }
 
-// --- Cleanup registry ------------------------------------------------------
-// Challenge modules register teardown through `ctx.cleanup(fn)`. The router
-// drains the registry before every render, so a module's timers and pointer
-// listeners never outlive the screen that created them.
-
-let cleanupHandlers = [];
-
-const registerCleanup = (handler) => {
-  if (typeof handler === 'function') cleanupHandlers.push(handler);
-};
-
-export function runCaptchaCleanup() {
-  const handlers = cleanupHandlers;
-  cleanupHandlers = [];
-  handlers.forEach((handler) => handler());
-}
+// Challenge modules register teardown through `ctx.cleanup(fn)`, which is the
+// shared registry in cleanup.js. The router drains it before every render, so a
+// module's timers and pointer listeners never outlive the screen that made them.
 
 // A rejection may carry its own line, for example the rotate challenge's
 // "Image is not upright." It survives exactly one render and is then dropped.

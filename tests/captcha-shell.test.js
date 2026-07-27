@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   renderCaptcha,
   rejectionFor,
-  runCaptchaCleanup,
   SKIP_MESSAGE
 } from '../src/scripts/screens/captcha.js';
+import { runCleanup } from '../src/scripts/cleanup.js';
 import { CAPTCHA_MODULES } from '../src/scripts/captchas/index.js';
 import { createRouter } from '../src/scripts/main.js';
 import { createStore } from '../src/scripts/store.js';
@@ -83,7 +83,7 @@ function mount(overrides = {}, module = stubModule()) {
   const deps = { dispatch: store.dispatch, audio, captchas };
 
   store.subscribe((state) => {
-    runCaptchaCleanup();
+    runCleanup();
     if (state.screen === 'captcha') renderCaptcha(root, state, deps);
   });
   renderCaptcha(root, store.getState(), deps);
@@ -122,7 +122,7 @@ describe('rejectionFor', () => {
 describe('renderCaptcha', () => {
   beforeEach(() => {
     document.body.replaceChildren();
-    runCaptchaCleanup();
+    runCleanup();
   });
 
   it('renders the module title, instruction, a VERIFY button and an error region', () => {
@@ -264,15 +264,15 @@ describe('renderCaptcha', () => {
 describe('cleanup registry', () => {
   beforeEach(() => {
     document.body.replaceChildren();
-    runCaptchaCleanup();
+    runCleanup();
   });
 
   it('runs registered handlers exactly once and forgets them', () => {
     const { module } = mount();
     expect(module.calls.cleanup).toBe(0);
-    runCaptchaCleanup();
+    runCleanup();
     expect(module.calls.cleanup).toBe(1);
-    runCaptchaCleanup();
+    runCleanup();
     expect(module.calls.cleanup).toBe(1);
   });
 

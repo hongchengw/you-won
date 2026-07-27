@@ -1,1 +1,370 @@
-/* Holy gate scene. Filled in by T10. */
+/* Holy gate scene. SPEC.md section 5.3.
+
+   The opposite of every other stylesheet here: a serif face, gold and white,
+   wide tracking, slow reverent easing. No pastel, no Comic Sans, no shake.
+   Nothing in this file may look like a joke.
+
+   The timeline is driven by two class flips from gate.js — `.gate-open` on the
+   screen at 1.5s and `.gate-beat-on` on each line — so every duration below is
+   anchored to those two moments. */
+
+.screen-gate {
+  --gold: #e8c66a;
+  --gold-deep: #b08a2e;
+  --gold-pale: #fff4d2;
+
+  position: relative;
+  overflow: hidden;
+  justify-content: center;
+  color: var(--gold-deep);
+}
+
+/* The serif face has to beat `body.fx-comicSans *`, which is still on the body
+   while the scene freezes the descent. Reverence outranks the joke here. */
+.screen-gate,
+.screen-gate * {
+  font-family: var(--font-holy) !important;
+}
+
+/* --- 0.0s: the bloom ------------------------------------------------------
+   A white radial that opens from the centre and reaches pure, edge-to-edge
+   white at 1.5s. It sits above the chaos, so the descent is simply erased. */
+
+.gate-bloom {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, #fff 0%, #fff 40%, rgba(255, 255, 255, 0) 70%);
+  transform: scale(0.05);
+  opacity: 0;
+  animation: gate-bloom 1.5s cubic-bezier(0.32, 0, 0.24, 1) forwards;
+}
+
+@keyframes gate-bloom {
+  0% {
+    transform: scale(0.05);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3.4);
+    opacity: 1;
+  }
+}
+
+/* Once the white has landed it stays landed: a flat sheet under everything
+   else, so no chaos colour can bleed back through the gaps. */
+.screen-gate::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #fff;
+  opacity: 0;
+  animation: gate-white 1.5s linear forwards;
+}
+
+@keyframes gate-white {
+  0%,
+  55% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* --- 1.5s: the doors ------------------------------------------------------
+   Two ornate panels materialise against the white and part over four slow
+   seconds, so the light behind them is revealed rather than switched on. */
+
+.gate-doors {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  width: min(560px, 78vw);
+  height: min(60vh, 460px);
+  pointer-events: none;
+}
+
+.gate-door {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  /* The filigree is painted edge to edge, so the arch has to do the clipping. */
+  overflow: hidden;
+  opacity: 0;
+  background: linear-gradient(180deg, var(--gold-pale) 0%, var(--gold) 45%, var(--gold-deep) 100%);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
+/* The filigree: a lattice of thin gold lines plus a rosette, all painted with
+   gradients so the scene still needs zero image requests. */
+.gate-door::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.4) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(-45deg, rgba(176, 138, 46, 0.35) 0 1px, transparent 1px 16px);
+}
+
+.gate-door::after {
+  content: "";
+  position: absolute;
+  top: 16%;
+  width: 62%;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 62%);
+}
+
+.gate-door-left {
+  border-radius: 240px 0 0 6px;
+  transform-origin: left center;
+}
+
+.gate-door-left::after {
+  right: 8%;
+}
+
+.gate-door-right {
+  border-radius: 0 240px 6px 0;
+  transform-origin: right center;
+}
+
+.gate-door-right::after {
+  left: 8%;
+}
+
+/* Materialise fully, then part. The parting runs from 2.5s to 5.9s on the
+   scene clock, so the doors are still moving when the cut takes them away, and
+   `forwards` holds them open until it does. */
+.gate-open .gate-door-left {
+  animation:
+    gate-materialise 1s ease-out forwards,
+    gate-part-left 3.4s cubic-bezier(0.7, 0, 0.3, 1) 1s forwards;
+}
+
+.gate-open .gate-door-right {
+  animation:
+    gate-materialise 1s ease-out forwards,
+    gate-part-right 3.4s cubic-bezier(0.7, 0, 0.3, 1) 1s forwards;
+}
+
+@keyframes gate-materialise {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.92;
+  }
+}
+
+@keyframes gate-part-left {
+  to {
+    transform: translateX(-58%) perspective(900px) rotateY(38deg);
+  }
+}
+
+@keyframes gate-part-right {
+  to {
+    transform: translateX(58%) perspective(900px) rotateY(-38deg);
+  }
+}
+
+/* --- 1.5s: light and motes ------------------------------------------------
+   God rays sweep outward from the parting seam; slow gold particles drift up
+   through them. Both are decoration and neither ever takes a click. */
+
+.gate-light {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.gate-open .gate-light {
+  animation: gate-materialise 1.6s ease-out forwards;
+}
+
+/* The source: a warm glow sitting behind the seam, so the parting doors reveal
+   something rather than simply exposing the page. */
+.gate-light::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(760px, 92vw);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--gold-pale) 0%, rgba(255, 244, 210, 0.55) 38%, rgba(255, 255, 255, 0) 70%);
+}
+
+.gate-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150vmax;
+  height: var(--w);
+  transform-origin: 0 50%;
+  rotate: var(--a);
+  background: linear-gradient(90deg, rgba(232, 198, 106, 0.55), rgba(255, 255, 255, 0));
+  opacity: 0;
+}
+
+.gate-open .gate-ray {
+  animation: gate-sweep 5s ease-out var(--delay) infinite;
+}
+
+@keyframes gate-sweep {
+  0% {
+    opacity: 0;
+    scale: 0.2 1;
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    scale: 1 1;
+  }
+}
+
+.gate-mote {
+  position: absolute;
+  bottom: -6%;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold-pale);
+  opacity: 0;
+}
+
+.gate-open .gate-mote {
+  animation: gate-drift var(--dur) linear var(--delay) infinite;
+}
+
+@keyframes gate-drift {
+  0% {
+    translate: 0 0;
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    translate: 12px -104vh;
+    opacity: 0;
+  }
+}
+
+/* --- 2.5s / 3.8s / 5.0s: the text ----------------------------------------
+   One grid cell for all three lines, so each fades in over the last. */
+
+.gate-text {
+  position: fixed;
+  inset: auto 0 14vh;
+  z-index: 4;
+  display: grid;
+  padding: 0 6vw;
+  pointer-events: none;
+}
+
+.gate-beat {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-size: clamp(1.1rem, 3.6vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+  text-shadow: 0 0 22px rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: opacity 1.1s ease-in-out;
+}
+
+.gate-beat-on {
+  opacity: 1;
+}
+
+/* A revealed line steps aside once the next one arrives. */
+.gate-beat-on:has(~ .gate-beat-on) {
+  opacity: 0;
+}
+
+/* The mute toggle stays reachable here too — mute is never part of the prank —
+   but it drops the candy sticker look and any chaos the level left on it. */
+.screen-gate .mute-toggle {
+  z-index: 5;
+  animation: none;
+  transform: none;
+  color: var(--gold-deep);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px var(--gold), 0 2px 18px rgba(176, 138, 46, 0.28);
+}
+
+/* --- Freezing the descent -------------------------------------------------
+   `body.gate-scene` is on for the length of the scene. Every chaos animation
+   stops where it stands, the chaos overlays and the mascot go, and the colour
+   filters come off, so the white the bloom paints is actually white. */
+
+body.gate-scene,
+body.gate-scene #app {
+  animation: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+body.gate-scene::before,
+body.gate-scene > *:not(#app),
+body.gate-scene > *:not(#app) * {
+  animation-play-state: paused !important;
+}
+
+body.gate-scene .fx-trail-layer,
+body.gate-scene .fx-popup-layer,
+body.gate-scene .fx-glitch-overlay,
+body.gate-scene .fx-strobe-overlay,
+body.gate-scene .mascot {
+  display: none !important;
+}
+
+/* Reduced motion: the fade and the text beats are the scene, so they stay.
+   The ray sweep and the drifting motes are the flourish, so they go. */
+@media (prefers-reduced-motion: reduce) {
+  .gate-bloom {
+    animation: gate-white 1.5s linear forwards;
+    transform: none;
+  }
+
+  .gate-open .gate-door-left,
+  .gate-open .gate-door-right {
+    animation: gate-materialise 1s ease-out forwards;
+  }
+
+  .gate-open .gate-ray,
+  .gate-open .gate-mote {
+    animation: none;
+  }
+
+  .gate-ray {
+    opacity: 0.35;
+  }
+
+  .gate-mote {
+    display: none;
+  }
+}
