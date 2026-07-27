@@ -850,6 +850,432 @@ button {
   outline-offset: 2px;
 }
 
+/* --- Challenge 5: puzzle --------------------------------------------------
+   SPEC section 6 row 5. One little picture cut into four, a ghost of it in the
+   frame, and four dashed sockets. It looks one drag away from finished at all
+   times, which is the entire point. */
+
+.puzzle-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.puzzle-board {
+  /* The picture, defined once and windowed by the frame and the four pieces so
+     they really are slices of the same image. */
+  --puzzle-art:
+    radial-gradient(circle 15px at 92px 26px, #ffcf3f 0 100%, transparent 100%),
+    radial-gradient(circle 11px at 30px 30px, #fff 0 100%, transparent 100%),
+    radial-gradient(circle 15px at 46px 34px, #fff 0 100%, transparent 100%),
+    radial-gradient(circle 14px at 32px 96px, #3f9e73 0 100%, transparent 100%),
+    radial-gradient(4px 10px at 32px 110px, #8a6a4b 0 100%, transparent 100%),
+    radial-gradient(60px 36px at 18px 126px, #58c797 0 100%, transparent 100%),
+    radial-gradient(68px 44px at 100px 130px, #7fdcb3 0 100%, transparent 100%),
+    linear-gradient(180deg, #8fd3ff 0%, #d5eeff 58%, #bfe9d7 100%);
+
+  position: relative;
+  flex: none;
+  width: 300px;
+  height: 180px;
+  overflow: hidden;
+  background: repeating-linear-gradient(45deg, #f6f8fa 0 8px, #eef2f6 8px 16px);
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.puzzle-frame {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background-image: var(--puzzle-art);
+  background-size: 120px 120px;
+  opacity: 0.22;
+  border: 2px dashed #9fb2c6;
+  border-radius: 4px;
+}
+
+.puzzle-slot {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 1px dashed #b7c4d1;
+  border-radius: 3px;
+}
+
+.puzzle-piece {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  background-image: var(--puzzle-art);
+  background-size: 120px 120px;
+  background-position: var(--piece-x) var(--piece-y);
+  border: 2px solid #fff;
+  border-radius: 8px;
+  /* The inset hairline keeps a pale quadrant reading as a piece against the
+     pale board rather than dissolving into it. */
+  box-shadow: 0 2px 5px rgba(16, 24, 32, 0.32), inset 0 0 0 1px rgba(38, 49, 61, 0.22);
+  cursor: grab;
+  /* Required, or the browser scrolls the page instead of dragging the piece. */
+  touch-action: none;
+}
+
+.puzzle-piece:focus-visible {
+  outline: 2px solid #1c6ec4;
+  outline-offset: 2px;
+}
+
+.puzzle-piece-held {
+  z-index: 3;
+  cursor: grabbing;
+  scale: 1.07;
+  box-shadow: 0 8px 16px rgba(16, 24, 32, 0.4);
+}
+
+/* The refusal, made visible: the piece skids as it slips out of the socket. */
+.puzzle-piece-slipped {
+  animation: puzzle-slip 0.3s ease-out;
+}
+
+@keyframes puzzle-slip {
+  0% {
+    rotate: -7deg;
+    scale: 1.05;
+  }
+  60% {
+    rotate: 4deg;
+  }
+  100% {
+    rotate: 0deg;
+    scale: 1;
+  }
+}
+
+.puzzle-countdown {
+  margin: 0;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: #7c8b99;
+}
+
+/* --- Challenge 6: distorted text ------------------------------------------
+   SPEC section 6 row 6. Canvas warped glyphs, a reload button and a box. It is
+   the most familiar shape on the internet, which is why it is the hardest one
+   to doubt. */
+
+.distorted-panel {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.distorted-plate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.distorted-canvas {
+  flex: 1;
+  min-width: 0;
+  /* The canvas is drawn at 2x and displayed at 1x, so the glyphs stay sharp. */
+  max-width: 264px;
+  height: auto;
+  background: #f2f4f7;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.distorted-refresh {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: #4a5865;
+  background: #eef2f6;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.distorted-refresh:hover {
+  background: #e2e9f0;
+}
+
+.distorted-field {
+  width: 100%;
+}
+
+.distorted-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  color: #26313d;
+  background: #fff;
+  border: 1px solid #b7c4d1;
+  border-radius: 3px;
+}
+
+.distorted-input:focus-visible {
+  outline: 2px solid #1c6ec4;
+  outline-offset: 1px;
+}
+
+.distorted-hint {
+  justify-self: start;
+  margin: 0;
+  font-size: 0.66rem;
+  color: #8d99a5;
+}
+
+/* --- Challenge 7: timer ---------------------------------------------------
+   SPEC section 6 row 7. Everything about this panel says "nearly there": the
+   spinner turns, the bar advances, the status line changes. The number does
+   not cooperate. */
+
+.timer-panel {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 6px 0;
+}
+
+.timer-dial {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.timer-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #dce3ea;
+  border-top-color: #1c6ec4;
+  border-radius: 50%;
+  animation: timer-spin 0.9s linear infinite;
+}
+
+@keyframes timer-spin {
+  100% {
+    rotate: 360deg;
+  }
+}
+
+.timer-count {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: clamp(2.4rem, 14vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: #26313d;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-unit {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: #7c8b99;
+}
+
+.timer-track {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  background: #e6eaee;
+  border-radius: 999px;
+}
+
+.timer-bar {
+  display: block;
+  height: 100%;
+  width: 6%;
+  background: linear-gradient(90deg, #4da3ff, #1c6ec4);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.timer-status {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #4a5865;
+}
+
+.timer-notice {
+  margin: 0;
+  font-size: 0.66rem;
+  color: #8d99a5;
+}
+
+/* --- Challenge 8: rotate --------------------------------------------------
+   SPEC section 6 row 8. Roof on top, door on the ground, smoke going up, sun
+   in the sky. There is nothing to fix, and every angle is rejected. */
+
+.rotate-stage {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+
+.rotate-frame {
+  display: grid;
+  place-items: center;
+  /* Wide enough to hold the 150px scene turned to 45 degrees, so no angle ever
+     clips a corner off the house. */
+  width: 214px;
+  height: 214px;
+  overflow: hidden;
+  background: repeating-conic-gradient(#eef2f6 0% 25%, #f7f9fb 0% 50%) 0 / 16px 16px;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.rotate-scene {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #cfeaff 0%, #eaf7ff 100%);
+  border-radius: 4px;
+  rotate: var(--rotate-angle, 0deg);
+  transition: rotate 0.12s ease-out;
+}
+
+.rotate-part {
+  position: absolute;
+}
+
+.rotate-sun {
+  top: 10px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  background: #ffe07a;
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(255, 224, 122, 0.35);
+}
+
+.rotate-cloud {
+  top: 26px;
+  left: 12px;
+  width: 40px;
+  height: 13px;
+  background: #fff;
+  border-radius: 999px;
+  box-shadow: 10px -7px 0 -1px #fff, 22px -3px 0 -3px #fff;
+}
+
+.rotate-ground {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  background: linear-gradient(180deg, #a8ecc8 0%, #7fdcae 100%);
+}
+
+.rotate-smoke {
+  left: 90px;
+  bottom: 128px;
+  width: 9px;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow:
+    6px -9px 0 1px rgba(255, 255, 255, 0.75),
+    13px -19px 0 3px rgba(255, 255, 255, 0.55);
+}
+
+.rotate-chimney {
+  left: 92px;
+  bottom: 104px;
+  width: 12px;
+  height: 26px;
+  background: #c25b57;
+  border-radius: 2px 2px 0 0;
+}
+
+.rotate-roof {
+  left: 28px;
+  bottom: 86px;
+  width: 94px;
+  height: 40px;
+  background: linear-gradient(180deg, #e8837e 0%, #d4655f 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.rotate-wall {
+  left: 38px;
+  bottom: 34px;
+  width: 74px;
+  height: 52px;
+  background: #fff4e4;
+  border: 1px solid #e6d3ba;
+}
+
+.rotate-window {
+  left: 90px;
+  bottom: 58px;
+  width: 16px;
+  height: 16px;
+  background: #bde3ff;
+  border: 2px solid #fff;
+  border-radius: 2px;
+}
+
+.rotate-door {
+  left: 62px;
+  bottom: 34px;
+  width: 22px;
+  height: 32px;
+  background: #a9744f;
+  border-radius: 5px 5px 0 0;
+}
+
+.rotate-door::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  right: 4px;
+  width: 4px;
+  height: 4px;
+  background: #ffe07a;
+  border-radius: 50%;
+}
+
+.rotate-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.rotate-slider {
+  width: 100%;
+  accent-color: #1c6ec4;
+}
+
+.rotate-readout {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.72rem;
+  color: #4a5865;
+}
+
+.rotate-marks {
+  display: flex;
+  grid-column: 1 / 2;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  color: #9fb2c6;
+}
+
 /* --- Chaos overrides ------------------------------------------------------
    The widget is the last thing on the page still pretending to be serious, so
    it loses its composure a level later than everything else. */
@@ -934,14 +1360,33 @@ body.fx-neon .captcha-skip {
   .blob-grid {
     gap: 4px;
   }
+
+  /* The puzzle board and the rotate frame are fixed pixel sizes, so at 390px
+     they get the padding back rather than being allowed to overflow. */
+  .puzzle-stage,
+  .rotate-stage {
+    margin: 0 -4px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .captcha-card,
   .captcha-error:not(:empty),
   .fire-tile-swapped,
+  .puzzle-piece-slipped,
   body.fx-dodge .captcha-skip {
     animation: none;
+  }
+
+  /* The spinner keeps its ring, it just stops turning. The bar and the scene
+     jump straight to their new values. */
+  .timer-spinner {
+    animation: none;
+  }
+
+  .timer-bar,
+  .rotate-scene {
+    transition: none;
   }
 
   /* Belt and braces: the swap is already withheld by the chaos flag, and the
@@ -3445,29 +3890,737 @@ const __default_scripts_captchas_robot_js = {
   }
 };
 
+// scripts/captchas/puzzle.js
+// CAPTCHA 5: puzzle. SPEC.md section 6, row 5.
+//
+// Four pieces of one small picture, four dashed sockets, and a ghost of the
+// finished image showing through the frame. It drags beautifully. The piece
+// really does reach the socket, sits there for exactly as long as you hold the
+// pointer down, and slides off the moment you let go.
+//
+// Ten seconds later the challenge fails on its own, which is just enough time
+// to try it three times and start doubting your hands.
+
+// Board geometry in CSS pixels. Everything is absolute inside the board, so the
+// same numbers drive the layout, the drag maths and the clamping.
+const PUZZLE_BOARD = { width: 300, height: 180 };
+const PUZZLE_PIECE = 60;
+const PUZZLE_FRAME = { left: 90, top: 30 };
+
+// SPEC section 6 row 5: auto-fail at 10s.
+const PUZZLE_SECONDS = 10;
+
+// The level from which the countdown starts lying. SPEC section 6 row 5.
+const PUZZLE_UNRELIABLE_LEVEL = 5;
+
+// Scattered starts, one per quadrant of the picture. Far enough from the frame
+// that the board reads as "four pieces waiting to be assembled".
+const PUZZLE_LAYOUT = [
+  { column: 0, row: 0, start: { x: 8, y: 6 } },
+  { column: 1, row: 0, start: { x: 230, y: 12 } },
+  { column: 0, row: 1, start: { x: 12, y: 112 } },
+  { column: 1, row: 1, start: { x: 228, y: 108 } }
+];
+
+// Candidate escape offsets, tried in order from a rotating start so no two
+// releases behave the same way. The first one that lands clear of both the drop
+// point and the socket wins.
+const PUZZLE_ESCAPES = [
+  { x: 34, y: -12 },
+  { x: -30, y: 18 },
+  { x: 16, y: 32 },
+  { x: -24, y: -28 },
+  { x: 38, y: 10 },
+  { x: -36, y: -6 },
+  { x: 8, y: -34 },
+  { x: -14, y: 34 }
+];
+
+// How far a released piece has to end up from where it was dropped for the
+// refusal to be unmistakable rather than look like a rendering wobble.
+const PUZZLE_CLEARANCE = 14;
+
+const puzzleGap = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+const puzzleTarget = (spot) => ({
+  x: PUZZLE_FRAME.left + spot.column * PUZZLE_PIECE,
+  y: PUZZLE_FRAME.top + spot.row * PUZZLE_PIECE
+});
+
+// Pieces stay on the board. Wandering off into the card would give the game
+// away, and a piece nobody can reach is not funny, it is broken.
+function puzzleClamp(point) {
+  const limit = (value, max) => Math.min(Math.max(value, 0), max);
+  return {
+    x: limit(point.x, PUZZLE_BOARD.width - PUZZLE_PIECE),
+    y: limit(point.y, PUZZLE_BOARD.height - PUZZLE_PIECE)
+  };
+}
+
+// Pure. Given where the piece was dropped and where it was supposed to go,
+// returns where it actually ends up: clear of the socket, clear of the drop,
+// and preferably further from the socket than it already was.
+function puzzleNudge(point, target, step) {
+  const start = Math.abs(Math.trunc(step) || 0);
+  const away = { x: point.x - target.x, y: point.y - target.y };
+  const heading = away.x === 0 && away.y === 0 ? { x: 1, y: 0.4 } : away;
+
+  const attempt = (outwardOnly) => {
+    for (let index = 0; index < PUZZLE_ESCAPES.length; index += 1) {
+      const escape = PUZZLE_ESCAPES[(start + index) % PUZZLE_ESCAPES.length];
+      const outward = escape.x * heading.x + escape.y * heading.y >= 0;
+      if (outwardOnly && !outward) continue;
+
+      const moved = puzzleClamp({ x: point.x + escape.x, y: point.y + escape.y });
+      if (puzzleGap(moved, point) > PUZZLE_CLEARANCE && puzzleGap(moved, target) > PUZZLE_CLEARANCE) {
+        return moved;
+      }
+    }
+    return null;
+  };
+
+  // Boxed into a corner with nowhere sensible to go. The opposite corner always
+  // is somewhere, and it is a long way from the frame.
+  return attempt(true) || attempt(false) || puzzleClamp({ x: PUZZLE_BOARD.width, y: 0 });
+}
+
+// SPEC section 6 row 5: the countdown gets unreliable at high chaos. The clock
+// underneath it does not, so the auto-fail still lands at ten seconds.
+function puzzleCountdownText(remaining, level) {
+  if (level >= PUZZLE_UNRELIABLE_LEVEL && remaining % 3 === 1) {
+    return `${remaining + 4}`;
+  }
+  return `${remaining}`;
+}
+
+function puzzlePlace(piece, point) {
+  piece.style.left = `${point.x}px`;
+  piece.style.top = `${point.y}px`;
+}
+
+function puzzleBuildPiece(spot, index) {
+  const piece = document.createElement('button');
+  piece.type = 'button';
+  piece.className = 'puzzle-piece';
+  piece.dataset.index = String(index);
+  piece.setAttribute('aria-label', `Puzzle piece ${index + 1}`);
+
+  const target = puzzleTarget(spot);
+  piece.dataset.targetX = String(target.x);
+  piece.dataset.targetY = String(target.y);
+
+  // The slice of the picture this piece carries, so the four of them really do
+  // make one image.
+  piece.style.setProperty('--piece-x', `${-spot.column * PUZZLE_PIECE}px`);
+  piece.style.setProperty('--piece-y', `${-spot.row * PUZZLE_PIECE}px`);
+  puzzlePlace(piece, spot.start);
+
+  return { piece, target };
+}
+
+function puzzleBuildSlot(spot) {
+  const slot = document.createElement('span');
+  slot.className = 'puzzle-slot';
+  slot.setAttribute('aria-hidden', 'true');
+
+  const target = puzzleTarget(spot);
+  slot.style.left = `${target.x}px`;
+  slot.style.top = `${target.y}px`;
+  return slot;
+}
+
+const __default_scripts_captchas_puzzle_js = {
+  id: 'puzzle',
+  title: 'Assembly Verification',
+  instruction: 'Slide the puzzle pieces into place.',
+
+  render(root, ctx) {
+    const stage = document.createElement('div');
+    stage.className = 'puzzle-stage';
+
+    const board = document.createElement('div');
+    board.className = 'puzzle-board';
+
+    // The finished picture, ghosted, exactly where the pieces belong.
+    const frame = document.createElement('span');
+    frame.className = 'puzzle-frame';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.left = `${PUZZLE_FRAME.left}px`;
+    frame.style.top = `${PUZZLE_FRAME.top}px`;
+    board.append(frame);
+
+    PUZZLE_LAYOUT.forEach((spot) => board.append(puzzleBuildSlot(spot)));
+
+    const pieces = PUZZLE_LAYOUT.map((spot, index) => puzzleBuildPiece(spot, index));
+    pieces.forEach((entry) => board.append(entry.piece));
+
+    const countdown = document.createElement('p');
+    countdown.className = 'puzzle-countdown';
+
+    let remaining = PUZZLE_SECONDS;
+    const paint = () => {
+      countdown.textContent = `TIME REMAINING ${puzzleCountdownText(remaining, ctx.level)}s`;
+    };
+    paint();
+
+    stage.append(board, countdown);
+    root.append(stage);
+
+    // --- Dragging ----------------------------------------------------------
+    // Pointer events, so it works with a finger. Move and release listen on the
+    // document rather than the piece, so a fast drag never loses the piece
+    // halfway through the gesture.
+
+    let held = null;
+    let releases = 0;
+
+    const onDown = (event, entry) => {
+      if (event.button !== undefined && event.button > 0) return;
+      if (event.preventDefault) event.preventDefault();
+
+      held = {
+        entry,
+        pointerX: event.clientX,
+        pointerY: event.clientY,
+        origin: {
+          x: parseFloat(entry.piece.style.left) || 0,
+          y: parseFloat(entry.piece.style.top) || 0
+        }
+      };
+      entry.piece.classList.add('puzzle-piece-held');
+    };
+
+    const onMove = (event) => {
+      if (!held) return;
+      puzzlePlace(
+        held.entry.piece,
+        puzzleClamp({
+          x: held.origin.x + (event.clientX - held.pointerX),
+          y: held.origin.y + (event.clientY - held.pointerY)
+        })
+      );
+    };
+
+    const onUp = () => {
+      if (!held) return;
+      const piece = held.entry.piece;
+      const dropped = {
+        x: parseFloat(piece.style.left) || 0,
+        y: parseFloat(piece.style.top) || 0
+      };
+
+      // The whole joke in one line: it never stays where you put it.
+      puzzlePlace(piece, puzzleNudge(dropped, held.entry.target, releases));
+      releases += 1;
+
+      piece.classList.remove('puzzle-piece-held');
+      piece.classList.remove('puzzle-piece-slipped');
+      // Forced reflow so the slip animation restarts on a piece that just ran.
+      void piece.offsetWidth;
+      piece.classList.add('puzzle-piece-slipped');
+      held = null;
+    };
+
+    pieces.forEach((entry) => {
+      entry.piece.addEventListener('pointerdown', (event) => onDown(event, entry));
+    });
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
+
+    // --- Clock -------------------------------------------------------------
+
+    const clock = setInterval(() => {
+      remaining -= 1;
+      if (remaining > 0) {
+        paint();
+        return;
+      }
+      clearInterval(clock);
+      countdown.textContent = 'TIME REMAINING 0s';
+      ctx.reject('Assembly not completed in time.');
+    }, 1000);
+
+    ctx.cleanup(() => {
+      clearInterval(clock);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      held = null;
+    });
+  },
+
+  // Always false. The pieces have never once been in place.
+  verify() {
+    return false;
+  }
+};
+
+// scripts/captchas/distortedText.js
+// CAPTCHA 6: distorted text. SPEC.md section 6, row 6.
+//
+// The most convincing one, because it is exactly what a real CAPTCHA looks
+// like: warped glyphs on a speckled plate, struck through with wavy lines, a
+// reload button, and a box to type it into.
+//
+// The string is pronounceable and meaningless, so it feels readable and there
+// is nothing to guess. And it is regenerated on every attempt, so whatever you
+// squinted at last time is not on the screen any more.
+
+// Consonants and vowels chosen for legibility: no letters that read as another
+// letter once they are rotated and skewed.
+const DISTORTED_HEADS = 'bdfghjkmnprstvz';
+const DISTORTED_VOWELS = 'aeiou';
+const DISTORTED_TAILS = 'bdgklmnprstxz';
+
+// Head, vowel, tail, twice. Six glyphs is the sweet spot: long enough to look
+// serious, short enough that nobody blames their own memory.
+const DISTORTED_PATTERN = [DISTORTED_HEADS, DISTORTED_VOWELS, DISTORTED_TAILS];
+const DISTORTED_LENGTH = 6;
+
+// The pattern can occasionally land on a real word. A real word would give the
+// visitor something to hold on to, so those seeds roll again.
+const DISTORTED_WORDS = [
+  'basket', 'bottle', 'button', 'candle', 'danger', 'finger', 'garden',
+  'hunter', 'kitten', 'listen', 'market', 'master', 'mister', 'mitten',
+  'monkey', 'murder', 'number', 'orange', 'parted', 'person', 'pocket',
+  'rabbit', 'rocket', 'salmon', 'silver', 'sister', 'sunset', 'target',
+  'ticket', 'tunnel', 'velvet', 'winter'
+];
+
+// Canvas plate. Drawn at twice the display size so the glyphs stay crisp.
+const DISTORTED_PLATE = { width: 264, height: 84, scale: 2 };
+
+// Lehmer again, same generator the grids use, kept local so a seed always
+// produces the same plate for a given attempt.
+function distortedRandom(seed) {
+  let state = ((Math.trunc(seed) || 1) * 7919) % 2147483647 || 7919;
+  return () => {
+    state = (state * 48271) % 2147483647;
+    return state / 2147483647;
+  };
+}
+
+// Pure. Seed in, nonsense out. Never a word, never the same twice in a row.
+function distortedTextFor(seed) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const next = distortedRandom((Math.trunc(seed) || 0) + attempt * 613 + 1);
+    let word = '';
+
+    for (let index = 0; index < DISTORTED_LENGTH; index += 1) {
+      const alphabet = DISTORTED_PATTERN[index % DISTORTED_PATTERN.length];
+      const letter = alphabet[Math.floor(next() * alphabet.length)];
+      // Mixed case, the way every real CAPTCHA does it.
+      word += next() > 0.55 ? letter.toUpperCase() : letter;
+    }
+
+    if (!DISTORTED_WORDS.includes(word.toLowerCase())) return word;
+  }
+
+  return 'xqvtho';
+}
+
+// Paints the plate. Returns false when there is no 2d context, which is the
+// case under jsdom unless a test stubs one in.
+function drawDistortedText(canvas, text, level) {
+  const plate = canvas.getContext ? canvas.getContext('2d') : null;
+  if (!plate) return false;
+
+  const { width, height, scale } = DISTORTED_PLATE;
+  const next = distortedRandom(text.length * 977 + text.charCodeAt(0) * 31 + level);
+
+  plate.setTransform(scale, 0, 0, scale, 0, 0);
+  plate.clearRect(0, 0, width, height);
+  plate.fillStyle = '#f2f4f7';
+  plate.fillRect(0, 0, width, height);
+
+  // Speckle, so the plate looks scanned rather than drawn.
+  for (let dot = 0; dot < 240; dot += 1) {
+    plate.fillStyle = next() > 0.5 ? 'rgba(38, 49, 61, 0.16)' : 'rgba(28, 110, 196, 0.12)';
+    plate.fillRect(next() * width, next() * height, 1.6, 1.6);
+  }
+
+  // Glyphs. Each one gets its own rotation, skew, size and baseline, which is
+  // what makes it read as distorted rather than as a font.
+  const step = (width - 34) / text.length;
+  const wobble = level >= 5 ? 1.5 : 1;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const size = 32 + next() * 12;
+    const tilt = (next() - 0.5) * 0.62 * wobble;
+    const skew = (next() - 0.5) * 0.44 * wobble;
+    const lift = (next() - 0.5) * 16 * wobble;
+
+    plate.save();
+    plate.translate(20 + index * step + step / 2, height / 2 + lift);
+    plate.rotate(tilt);
+    plate.transform(1, 0, skew, 1, 0, 0);
+    plate.font = `700 ${size}px "Trebuchet MS", Verdana, sans-serif`;
+    plate.textAlign = 'center';
+    plate.textBaseline = 'middle';
+    plate.fillStyle = `hsl(${210 + next() * 40} 30% ${22 + next() * 16}%)`;
+    plate.fillText(text[index], 0, 0);
+    plate.restore();
+  }
+
+  // Strike-through waves, drawn over the glyphs like the real thing.
+  for (let line = 0; line < 4; line += 1) {
+    plate.beginPath();
+    plate.strokeStyle = `hsl(${200 + next() * 60} 34% 42% / 0.55)`;
+    plate.lineWidth = 1 + next() * 1.4;
+    plate.moveTo(0, next() * height);
+    plate.quadraticCurveTo(width * 0.35, next() * height, width * 0.62, next() * height);
+    plate.quadraticCurveTo(width * 0.82, next() * height, width, next() * height);
+    plate.stroke();
+  }
+
+  return true;
+}
+
+const __default_scripts_captchas_distortedText_js = {
+  id: 'distortedText',
+  title: 'Text Verification',
+  instruction: 'Type the distorted text.',
+
+  render(root, ctx) {
+    const panel = document.createElement('div');
+    panel.className = 'distorted-panel';
+
+    const plate = document.createElement('div');
+    plate.className = 'distorted-plate';
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'distorted-canvas';
+    canvas.width = DISTORTED_PLATE.width * DISTORTED_PLATE.scale;
+    canvas.height = DISTORTED_PLATE.height * DISTORTED_PLATE.scale;
+    canvas.setAttribute('aria-hidden', 'true');
+
+    const refresh = document.createElement('button');
+    refresh.type = 'button';
+    refresh.className = 'distorted-refresh';
+    refresh.setAttribute('aria-label', 'Get a new challenge');
+    refresh.textContent = '↻';
+
+    const field = document.createElement('div');
+    field.className = 'distorted-field';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'distorted-input';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.setAttribute('aria-label', 'Type the distorted text');
+    input.placeholder = 'Enter the text above';
+
+    const hint = document.createElement('p');
+    hint.className = 'distorted-hint';
+    hint.textContent = 'Case sensitive. Letters only.';
+
+    // A fresh string per attempt, and a fresh one again on every reload click.
+    let reloads = 0;
+    const paint = () => {
+      const text = distortedTextFor(ctx.level * 977 + ctx.fails * 61 + reloads * 7);
+      canvas.dataset.challenge = text;
+      drawDistortedText(canvas, text, ctx.level);
+    };
+    paint();
+
+    refresh.addEventListener('click', () => {
+      reloads += 1;
+      input.value = '';
+      paint();
+    });
+
+    // Enter submits, the way it does in every form on the internet. It is the
+    // shell's failure path, exactly as if VERIFY had been pressed.
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      if (event.preventDefault) event.preventDefault();
+      ctx.reject('That does not match the image.');
+    });
+
+    plate.append(canvas, refresh);
+    field.append(input);
+    panel.append(plate, field, hint);
+    root.append(panel);
+
+    ctx.cleanup(() => panel.replaceChildren());
+  },
+
+  // Always false. Not even the string that is genuinely on the screen.
+  verify() {
+    return false;
+  }
+};
+
+// scripts/captchas/timer.js
+// CAPTCHA 7: timer. SPEC.md section 6, row 7.
+//
+// A spinner, a progress bar and a big countdown, all of them working hard and
+// none of them going anywhere. The number falls convincingly for a while, then
+// quietly gains a few seconds back, and it never reaches zero.
+//
+// VERIFY is disabled here, which is the point: there is no button to fail on.
+// So the challenge fails itself on a cycle instead, and the fail count still
+// climbs to six and still earns the skip link. Without that this level would be
+// a dead end, and a dead end is not a joke.
+
+// The published countdown. Hand written rather than generated so the shape is
+// obvious at a glance: a long believable slide, a small gift of a few seconds,
+// then down again. The minimum is 6, so it never reaches zero at any tick.
+const TIMER_SEQUENCE = [
+  30, 29, 28, 27, 31, 26, 25, 24, 23, 29, 22, 21, 20, 19, 25, 18,
+  17, 16, 15, 22, 14, 13, 12, 11, 19, 10, 9, 8, 7, 17, 6, 28
+];
+
+// SPEC section 6 row 7: it goes negative and glitches at high chaos.
+const TIMER_GLITCH_LEVEL = 7;
+
+// The first few ticks of a cycle are always honest, whatever the level, so the
+// clock reads 30 and falls convincingly before the wheels come off. The
+// challenge lives at level 7, and starting it already broken would give the
+// whole thing away.
+const TIMER_GLITCH_FROM = 4;
+
+// Fake readouts for the glitch levels. Never a plain number, so they read as a
+// fault rather than as progress.
+const TIMER_GLITCH_TEXT = ['--', 'NaN', '∞', '0x1F', '???'];
+
+// One self-rejection every eight ticks. Six of those is the skip link.
+const TIMER_ATTEMPT_TICKS = 8;
+
+const TIMER_STATUS = [
+  'Contacting verification node...',
+  'Analysing interaction patterns...',
+  'Comparing against known humans...',
+  'Awaiting confidence threshold...',
+  'Re-queuing verification request...'
+];
+
+// Pure. The number on the clock at a given tick.
+function timerValueFor(tick, level) {
+  const index = Math.abs(Math.trunc(tick) || 0) % TIMER_SEQUENCE.length;
+  const value = TIMER_SEQUENCE[index];
+  if (level < TIMER_GLITCH_LEVEL || index < TIMER_GLITCH_FROM) return value;
+
+  // From here the two ends of the sequence fight each other, which is how the
+  // clock ends up on the wrong side of zero. Exactly zero is the one answer it
+  // is never allowed to give, so a dead heat goes hard negative instead.
+  const drift = value - TIMER_SEQUENCE[(index * 5 + 3) % TIMER_SEQUENCE.length];
+  return drift === 0 ? -value : drift;
+}
+
+// Pure. What actually gets printed, which at high chaos is not always a number.
+function timerDisplayFor(tick, level) {
+  const index = Math.abs(Math.trunc(tick) || 0);
+  if (level >= TIMER_GLITCH_LEVEL && index >= TIMER_GLITCH_FROM && index % 3 === 0) {
+    return TIMER_GLITCH_TEXT[index % TIMER_GLITCH_TEXT.length];
+  }
+  return String(timerValueFor(index, level));
+}
+
+// The bar creeps up, resets just short of the end, and creeps up again.
+function timerProgressFor(tick) {
+  const index = Math.abs(Math.trunc(tick) || 0) % 24;
+  return 6 + index * 3.5;
+}
+
+const __default_scripts_captchas_timer_js = {
+  id: 'timer',
+  title: 'Automated Verification',
+  instruction: 'Please wait for verification.',
+
+  // The shell reads this and leaves VERIFY disabled for the whole level.
+  disableVerify: true,
+
+  render(root, ctx) {
+    const panel = document.createElement('div');
+    panel.className = 'timer-panel';
+
+    const dial = document.createElement('div');
+    dial.className = 'timer-dial';
+
+    const spinner = document.createElement('span');
+    spinner.className = 'timer-spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+
+    const count = document.createElement('span');
+    count.className = 'timer-count';
+
+    const unit = document.createElement('span');
+    unit.className = 'timer-unit';
+    unit.textContent = 'SECONDS REMAINING';
+
+    dial.append(spinner, count, unit);
+
+    const track = document.createElement('div');
+    track.className = 'timer-track';
+
+    const bar = document.createElement('span');
+    bar.className = 'timer-bar';
+    track.append(bar);
+
+    const status = document.createElement('p');
+    status.className = 'timer-status';
+
+    const notice = document.createElement('p');
+    notice.className = 'timer-notice';
+    notice.textContent = 'Manual verification is unavailable during this check.';
+
+    let tick = 0;
+    const paint = () => {
+      count.textContent = timerDisplayFor(tick, ctx.level);
+      bar.style.width = `${timerProgressFor(tick)}%`;
+      status.textContent = TIMER_STATUS[Math.floor(tick / 3) % TIMER_STATUS.length];
+    };
+    paint();
+
+    panel.append(dial, track, status, notice);
+    root.append(panel);
+
+    const clock = setInterval(() => {
+      tick += 1;
+      paint();
+
+      // The cycle that keeps this level from being a trap: the check reports
+      // its own failure, the shell counts it, and the skip link still arrives.
+      if (tick % TIMER_ATTEMPT_TICKS === 0) {
+        ctx.reject('Automated verification did not complete. Retrying.');
+      }
+    }, 1000);
+
+    ctx.cleanup(() => clearInterval(clock));
+  },
+
+  // Always false, and unreachable anyway: VERIFY never enables.
+  verify() {
+    return false;
+  }
+};
+
+// scripts/captchas/rotate.js
+// CAPTCHA 8: rotate. SPEC.md section 6, row 8.
+//
+// A little house with the roof on top, the door on the ground, smoke going up
+// and the sun in the sky. It is already upright. It could not be more upright.
+// The slider starts at 0 degrees, so the correct answer is to do nothing, and
+// doing nothing is rejected with "Image is not upright."
+//
+// This is the last challenge in the gauntlet, and it is the one people argue
+// with out loud.
+
+// SPEC section 6 row 8, verbatim. The shell renders it under the rejection.
+const ROTATE_REJECTION = 'Image is not upright.';
+
+// Cardinal marks under the slider, so the control looks calibrated.
+const ROTATE_MARKS = ['0°', '90°', '180°', '270°'];
+
+// The scene, back to front. Each part is a positioned span styled in
+// captcha.css: no images, no canvas, just shapes.
+const ROTATE_PARTS = ['sun', 'cloud', 'ground', 'smoke', 'chimney', 'roof', 'wall', 'window', 'door'];
+
+const __default_scripts_captchas_rotate_js = {
+  id: 'rotate',
+  title: 'Orientation Verification',
+  instruction: 'Rotate the image to the correct position.',
+
+  // Handed to the shell so the rejection carries the SPEC line.
+  rejection: ROTATE_REJECTION,
+
+  render(root, ctx) {
+    const stage = document.createElement('div');
+    stage.className = 'rotate-stage';
+
+    const frame = document.createElement('div');
+    frame.className = 'rotate-frame';
+
+    const scene = document.createElement('div');
+    scene.className = 'rotate-scene';
+    scene.setAttribute('role', 'img');
+    scene.setAttribute('aria-label', 'A house with a roof, a door and the sun');
+    scene.style.setProperty('--rotate-angle', '0deg');
+
+    ROTATE_PARTS.forEach((part) => {
+      const node = document.createElement('span');
+      node.className = `rotate-part rotate-${part}`;
+      node.setAttribute('aria-hidden', 'true');
+      scene.append(node);
+    });
+
+    frame.append(scene);
+
+    const control = document.createElement('div');
+    control.className = 'rotate-control';
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'rotate-slider';
+    slider.min = '0';
+    slider.max = '359';
+    slider.step = '1';
+    slider.value = '0';
+    slider.setAttribute('aria-label', 'Rotation in degrees');
+
+    const readout = document.createElement('span');
+    readout.className = 'rotate-readout';
+    readout.textContent = '0°';
+
+    const marks = document.createElement('div');
+    marks.className = 'rotate-marks';
+    marks.setAttribute('aria-hidden', 'true');
+    ROTATE_MARKS.forEach((label) => {
+      const mark = document.createElement('span');
+      mark.textContent = label;
+      marks.append(mark);
+    });
+
+    // The one control on the page that does exactly what it says it does.
+    slider.addEventListener('input', () => {
+      const angle = Number(slider.value) || 0;
+      scene.style.setProperty('--rotate-angle', `${angle}deg`);
+      readout.textContent = `${angle}°`;
+    });
+
+    control.append(slider, readout, marks);
+    stage.append(frame, control);
+    root.append(stage);
+
+    ctx.cleanup(() => stage.replaceChildren());
+  },
+
+  // Always false. Including, and especially, at 0 degrees.
+  verify() {
+    return false;
+  }
+};
+
 // scripts/captchas/index.js
 // The id to module registry. SPEC.md sections 2 and 6.
 //
 // The shell looks a module up by `captchaFor(state)`, so adding a real
 // challenge is one import and one swapped entry here. Every id in
-// CAPTCHA_ORDER must resolve, which is why the unwritten ones still point at
-// the stub. T08 filled in fire, images, math and robot; T09 fills in the rest.
+// CAPTCHA_ORDER must resolve. The stub is kept as the fallback for an id that
+// does not exist, which is the only way `captchaModule` can miss.
 
 const stubCaptcha = __default_scripts_captchas_stub_js;
 const fireCaptcha = __default_scripts_captchas_fire_js;
 const imagesCaptcha = __default_scripts_captchas_images_js;
 const mathCaptcha = __default_scripts_captchas_math_js;
 const robotCaptcha = __default_scripts_captchas_robot_js;
+const puzzleCaptcha = __default_scripts_captchas_puzzle_js;
+const distortedTextCaptcha = __default_scripts_captchas_distortedText_js;
+const timerCaptcha = __default_scripts_captchas_timer_js;
+const rotateCaptcha = __default_scripts_captchas_rotate_js;
 
 const CAPTCHA_MODULES = {
   fire: fireCaptcha,
   images: imagesCaptcha,
   math: mathCaptcha,
   robot: robotCaptcha,
-  puzzle: stubCaptcha,
-  distortedText: stubCaptcha,
-  timer: stubCaptcha,
-  rotate: stubCaptcha
+  puzzle: puzzleCaptcha,
+  distortedText: distortedTextCaptcha,
+  timer: timerCaptcha,
+  rotate: rotateCaptcha
 };
 
 function captchaModule(id) {
@@ -3617,6 +4770,10 @@ function captchaCard(state, deps) {
   verify.className = 'captcha-verify';
   verify.dataset.action = 'verify';
   verify.textContent = 'VERIFY';
+  // SPEC section 6, row 7: the timer challenge has no button to press. The
+  // module declares it and the shell honours it; the module then rejects on its
+  // own cycle so the skip link still arrives.
+  if (module.disableVerify) verify.disabled = true;
 
   const fineprint = document.createElement('p');
   fineprint.className = 'captcha-fineprint';
@@ -3642,7 +4799,9 @@ function captchaCard(state, deps) {
   verify.addEventListener('click', () => {
     deps.audio.blip();
     if (module.verify()) return;
-    reject();
+    // A module may carry a standing line for its rejections, for example the
+    // rotate challenge's "Image is not upright."
+    reject(module.rejection);
   });
 
   skipLink.addEventListener('click', () => {

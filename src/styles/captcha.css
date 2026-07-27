@@ -583,6 +583,432 @@
   outline-offset: 2px;
 }
 
+/* --- Challenge 5: puzzle --------------------------------------------------
+   SPEC section 6 row 5. One little picture cut into four, a ghost of it in the
+   frame, and four dashed sockets. It looks one drag away from finished at all
+   times, which is the entire point. */
+
+.puzzle-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.puzzle-board {
+  /* The picture, defined once and windowed by the frame and the four pieces so
+     they really are slices of the same image. */
+  --puzzle-art:
+    radial-gradient(circle 15px at 92px 26px, #ffcf3f 0 100%, transparent 100%),
+    radial-gradient(circle 11px at 30px 30px, #fff 0 100%, transparent 100%),
+    radial-gradient(circle 15px at 46px 34px, #fff 0 100%, transparent 100%),
+    radial-gradient(circle 14px at 32px 96px, #3f9e73 0 100%, transparent 100%),
+    radial-gradient(4px 10px at 32px 110px, #8a6a4b 0 100%, transparent 100%),
+    radial-gradient(60px 36px at 18px 126px, #58c797 0 100%, transparent 100%),
+    radial-gradient(68px 44px at 100px 130px, #7fdcb3 0 100%, transparent 100%),
+    linear-gradient(180deg, #8fd3ff 0%, #d5eeff 58%, #bfe9d7 100%);
+
+  position: relative;
+  flex: none;
+  width: 300px;
+  height: 180px;
+  overflow: hidden;
+  background: repeating-linear-gradient(45deg, #f6f8fa 0 8px, #eef2f6 8px 16px);
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.puzzle-frame {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background-image: var(--puzzle-art);
+  background-size: 120px 120px;
+  opacity: 0.22;
+  border: 2px dashed #9fb2c6;
+  border-radius: 4px;
+}
+
+.puzzle-slot {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 1px dashed #b7c4d1;
+  border-radius: 3px;
+}
+
+.puzzle-piece {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  background-image: var(--puzzle-art);
+  background-size: 120px 120px;
+  background-position: var(--piece-x) var(--piece-y);
+  border: 2px solid #fff;
+  border-radius: 8px;
+  /* The inset hairline keeps a pale quadrant reading as a piece against the
+     pale board rather than dissolving into it. */
+  box-shadow: 0 2px 5px rgba(16, 24, 32, 0.32), inset 0 0 0 1px rgba(38, 49, 61, 0.22);
+  cursor: grab;
+  /* Required, or the browser scrolls the page instead of dragging the piece. */
+  touch-action: none;
+}
+
+.puzzle-piece:focus-visible {
+  outline: 2px solid #1c6ec4;
+  outline-offset: 2px;
+}
+
+.puzzle-piece-held {
+  z-index: 3;
+  cursor: grabbing;
+  scale: 1.07;
+  box-shadow: 0 8px 16px rgba(16, 24, 32, 0.4);
+}
+
+/* The refusal, made visible: the piece skids as it slips out of the socket. */
+.puzzle-piece-slipped {
+  animation: puzzle-slip 0.3s ease-out;
+}
+
+@keyframes puzzle-slip {
+  0% {
+    rotate: -7deg;
+    scale: 1.05;
+  }
+  60% {
+    rotate: 4deg;
+  }
+  100% {
+    rotate: 0deg;
+    scale: 1;
+  }
+}
+
+.puzzle-countdown {
+  margin: 0;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: #7c8b99;
+}
+
+/* --- Challenge 6: distorted text ------------------------------------------
+   SPEC section 6 row 6. Canvas warped glyphs, a reload button and a box. It is
+   the most familiar shape on the internet, which is why it is the hardest one
+   to doubt. */
+
+.distorted-panel {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.distorted-plate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.distorted-canvas {
+  flex: 1;
+  min-width: 0;
+  /* The canvas is drawn at 2x and displayed at 1x, so the glyphs stay sharp. */
+  max-width: 264px;
+  height: auto;
+  background: #f2f4f7;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.distorted-refresh {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: #4a5865;
+  background: #eef2f6;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.distorted-refresh:hover {
+  background: #e2e9f0;
+}
+
+.distorted-field {
+  width: 100%;
+}
+
+.distorted-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  color: #26313d;
+  background: #fff;
+  border: 1px solid #b7c4d1;
+  border-radius: 3px;
+}
+
+.distorted-input:focus-visible {
+  outline: 2px solid #1c6ec4;
+  outline-offset: 1px;
+}
+
+.distorted-hint {
+  justify-self: start;
+  margin: 0;
+  font-size: 0.66rem;
+  color: #8d99a5;
+}
+
+/* --- Challenge 7: timer ---------------------------------------------------
+   SPEC section 6 row 7. Everything about this panel says "nearly there": the
+   spinner turns, the bar advances, the status line changes. The number does
+   not cooperate. */
+
+.timer-panel {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 6px 0;
+}
+
+.timer-dial {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.timer-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #dce3ea;
+  border-top-color: #1c6ec4;
+  border-radius: 50%;
+  animation: timer-spin 0.9s linear infinite;
+}
+
+@keyframes timer-spin {
+  100% {
+    rotate: 360deg;
+  }
+}
+
+.timer-count {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: clamp(2.4rem, 14vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: #26313d;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-unit {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: #7c8b99;
+}
+
+.timer-track {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  background: #e6eaee;
+  border-radius: 999px;
+}
+
+.timer-bar {
+  display: block;
+  height: 100%;
+  width: 6%;
+  background: linear-gradient(90deg, #4da3ff, #1c6ec4);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.timer-status {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #4a5865;
+}
+
+.timer-notice {
+  margin: 0;
+  font-size: 0.66rem;
+  color: #8d99a5;
+}
+
+/* --- Challenge 8: rotate --------------------------------------------------
+   SPEC section 6 row 8. Roof on top, door on the ground, smoke going up, sun
+   in the sky. There is nothing to fix, and every angle is rejected. */
+
+.rotate-stage {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+
+.rotate-frame {
+  display: grid;
+  place-items: center;
+  /* Wide enough to hold the 150px scene turned to 45 degrees, so no angle ever
+     clips a corner off the house. */
+  width: 214px;
+  height: 214px;
+  overflow: hidden;
+  background: repeating-conic-gradient(#eef2f6 0% 25%, #f7f9fb 0% 50%) 0 / 16px 16px;
+  border: 1px solid #d4dae1;
+  border-radius: 3px;
+}
+
+.rotate-scene {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #cfeaff 0%, #eaf7ff 100%);
+  border-radius: 4px;
+  rotate: var(--rotate-angle, 0deg);
+  transition: rotate 0.12s ease-out;
+}
+
+.rotate-part {
+  position: absolute;
+}
+
+.rotate-sun {
+  top: 10px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  background: #ffe07a;
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(255, 224, 122, 0.35);
+}
+
+.rotate-cloud {
+  top: 26px;
+  left: 12px;
+  width: 40px;
+  height: 13px;
+  background: #fff;
+  border-radius: 999px;
+  box-shadow: 10px -7px 0 -1px #fff, 22px -3px 0 -3px #fff;
+}
+
+.rotate-ground {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  background: linear-gradient(180deg, #a8ecc8 0%, #7fdcae 100%);
+}
+
+.rotate-smoke {
+  left: 90px;
+  bottom: 128px;
+  width: 9px;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow:
+    6px -9px 0 1px rgba(255, 255, 255, 0.75),
+    13px -19px 0 3px rgba(255, 255, 255, 0.55);
+}
+
+.rotate-chimney {
+  left: 92px;
+  bottom: 104px;
+  width: 12px;
+  height: 26px;
+  background: #c25b57;
+  border-radius: 2px 2px 0 0;
+}
+
+.rotate-roof {
+  left: 28px;
+  bottom: 86px;
+  width: 94px;
+  height: 40px;
+  background: linear-gradient(180deg, #e8837e 0%, #d4655f 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.rotate-wall {
+  left: 38px;
+  bottom: 34px;
+  width: 74px;
+  height: 52px;
+  background: #fff4e4;
+  border: 1px solid #e6d3ba;
+}
+
+.rotate-window {
+  left: 90px;
+  bottom: 58px;
+  width: 16px;
+  height: 16px;
+  background: #bde3ff;
+  border: 2px solid #fff;
+  border-radius: 2px;
+}
+
+.rotate-door {
+  left: 62px;
+  bottom: 34px;
+  width: 22px;
+  height: 32px;
+  background: #a9744f;
+  border-radius: 5px 5px 0 0;
+}
+
+.rotate-door::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  right: 4px;
+  width: 4px;
+  height: 4px;
+  background: #ffe07a;
+  border-radius: 50%;
+}
+
+.rotate-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.rotate-slider {
+  width: 100%;
+  accent-color: #1c6ec4;
+}
+
+.rotate-readout {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.72rem;
+  color: #4a5865;
+}
+
+.rotate-marks {
+  display: flex;
+  grid-column: 1 / 2;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  color: #9fb2c6;
+}
+
 /* --- Chaos overrides ------------------------------------------------------
    The widget is the last thing on the page still pretending to be serious, so
    it loses its composure a level later than everything else. */
@@ -667,14 +1093,33 @@ body.fx-neon .captcha-skip {
   .blob-grid {
     gap: 4px;
   }
+
+  /* The puzzle board and the rotate frame are fixed pixel sizes, so at 390px
+     they get the padding back rather than being allowed to overflow. */
+  .puzzle-stage,
+  .rotate-stage {
+    margin: 0 -4px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .captcha-card,
   .captcha-error:not(:empty),
   .fire-tile-swapped,
+  .puzzle-piece-slipped,
   body.fx-dodge .captcha-skip {
     animation: none;
+  }
+
+  /* The spinner keeps its ring, it just stops turning. The bar and the scene
+     jump straight to their new values. */
+  .timer-spinner {
+    animation: none;
+  }
+
+  .timer-bar,
+  .rotate-scene {
+    transition: none;
   }
 
   /* Belt and braces: the swap is already withheld by the chaos flag, and the

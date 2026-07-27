@@ -154,7 +154,14 @@ export default {
 };
 ```
 
-`ctx` provides `{ level, fails, reject(), cleanup(fn) }`. `reject()` runs the shell's fail path. `cleanup(fn)` registers teardown for timers and listeners so screen changes don't leak.
+`ctx` provides `{ level, fails, reject(), cleanup(fn) }`. `reject(note)` runs the shell's fail path, with an optional extra line rendered for one render. `cleanup(fn)` registers teardown for timers and listeners so screen changes don't leak.
+
+Two optional fields let a module tell the shell about itself:
+
+| Field | Effect |
+|---|---|
+| `rejection` | A standing note passed to `reject()` whenever VERIFY is pressed. `rotate` uses it for `Image is not upright.` |
+| `disableVerify` | The shell renders VERIFY permanently disabled. `timer` uses it, and therefore has to call `ctx.reject()` on its own cycle so `fails` still reaches `SKIP_THRESHOLD` |
 
 | # | id | Instruction | Behavior |
 |---|---|---|---|

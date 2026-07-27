@@ -143,6 +143,10 @@ function captchaCard(state, deps) {
   verify.className = 'captcha-verify';
   verify.dataset.action = 'verify';
   verify.textContent = 'VERIFY';
+  // SPEC section 6, row 7: the timer challenge has no button to press. The
+  // module declares it and the shell honours it; the module then rejects on its
+  // own cycle so the skip link still arrives.
+  if (module.disableVerify) verify.disabled = true;
 
   const fineprint = document.createElement('p');
   fineprint.className = 'captcha-fineprint';
@@ -168,7 +172,9 @@ function captchaCard(state, deps) {
   verify.addEventListener('click', () => {
     deps.audio.blip();
     if (module.verify()) return;
-    reject();
+    // A module may carry a standing line for its rejections, for example the
+    // rotate challenge's "Image is not upright."
+    reject(module.rejection);
   });
 
   skipLink.addEventListener('click', () => {
