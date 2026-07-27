@@ -14,7 +14,6 @@
 
 import { reset } from '../state.js';
 import { registerCleanup } from '../cleanup.js';
-import { renderMuteToggle } from './mute.js';
 
 // SPEC section 5.3, verbatim.
 export const GATE_BEATS = [
@@ -110,7 +109,7 @@ export function renderGate(root, state, deps) {
   bloom.setAttribute('aria-hidden', 'true');
 
   const { text, beats } = gateText();
-  screen.append(bloom, gateDoors(), gateLight(), text, renderMuteToggle(state, deps));
+  screen.append(bloom, gateDoors(), gateLight(), text);
   root.replaceChildren(screen);
 
   // Freezes the chaos: gate.css pauses every leftover fx animation and hides

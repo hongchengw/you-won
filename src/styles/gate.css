@@ -305,9 +305,11 @@
   opacity: 0;
 }
 
-/* The mute toggle stays reachable here too — mute is never part of the prank —
-   but it drops the candy sticker look and any chaos the level left on it. */
-.screen-gate .mute-toggle {
+/* The mute toggle stays reachable here too, mute never being part of the prank,
+   but it drops the candy sticker look and any chaos the level left on it. It is
+   mounted on the body rather than inside the screen, so it is addressed through
+   the scene's body class. */
+body.gate-scene .mute-toggle {
   z-index: 5;
   animation: none;
   transform: none;

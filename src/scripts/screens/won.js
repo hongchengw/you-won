@@ -3,7 +3,6 @@
 // All decoration is CSS animation, so nothing leaks when the screen unmounts.
 
 import { claim, MAX_LEVEL } from '../state.js';
-import { renderMuteToggle } from './mute.js';
 
 // One absurd prize per loop, escalating. SPEC.md section 5.1.
 export const PRIZES = [
@@ -121,7 +120,7 @@ export function renderWon(root, state, deps) {
   const screen = document.createElement('div');
   screen.className = 'screen screen-won';
 
-  screen.append(wonDecoration(), wonCard(state, deps), renderMuteToggle(state, deps));
+  screen.append(wonDecoration(), wonCard(state, deps));
   root.replaceChildren(screen);
   return screen;
 }

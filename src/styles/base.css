@@ -10,6 +10,16 @@ html,
 body {
   height: 100%;
   margin: 0;
+  /* SPEC section 8: nothing overflows the viewport horizontally, at any width
+     or chaos level. `fx-shake` translates #app and `fx-spin` rotates and
+     up-scales the whole screen, both of which are meant to push past the edges
+     and neither of which may grow the page. `overflow-x` on the body alone does
+     not clip that: Chrome propagates the body's value to the viewport only
+     while the root is `visible`, so the root gets the clip too. `clip` rather
+     than `hidden` keeps neither element a scroll container, so vertical
+     scrolling stays on the viewport and every `position: fixed` corner is
+     unaffected. */
+  overflow-x: clip;
 }
 
 body {
@@ -20,7 +30,6 @@ body {
     radial-gradient(110% 85% at 88% 12%, rgba(189, 227, 255, 0.8), transparent 55%),
     linear-gradient(165deg, var(--candy-pink) 0%, var(--candy-lavender) 48%, var(--candy-mint) 100%);
   background-attachment: fixed;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 

@@ -198,10 +198,16 @@ body.fx-popups .fx-popup-layer {
 }
 
 .fx-popup {
+  --fx-popup-w: min(230px, 42vw);
+
   position: absolute;
-  left: var(--fx-popup-x, 10%);
+  /* The seeded x is a percentage, so at 390px a right-hand popup would hang its
+     close button off the edge. Junk windows are allowed to be junk; they are not
+     allowed to carry a control the visitor cannot reach. The clamp keeps the
+     whole card, tilt and all, inside the viewport at every width. */
+  left: clamp(10px, var(--fx-popup-x, 10%), calc(100% - var(--fx-popup-w) - 10px));
   top: var(--fx-popup-y, 20%);
-  width: min(230px, 42vw);
+  width: var(--fx-popup-w);
   padding: 0 0 12px;
   color: var(--ink);
   background: var(--cream);
@@ -442,12 +448,8 @@ body.fx-spin .screen {
   animation: fx-spin-drift calc(19s * var(--fx-speed)) ease-in-out infinite;
 }
 
-/* The rotation carries the corner controls with it, so they get pulled inboard
-   far enough that no swing of the drift can push them past an edge. */
-body.fx-spin .mute-toggle {
-  top: clamp(48px, 7vw, 76px);
-  right: clamp(48px, 7vw, 76px);
-}
+/* The mute toggle is mounted on the body, outside the screen the drift rotates,
+   so it holds its corner through all of this and needs nothing here. */
 
 @keyframes fx-spin-drift {
   0%,

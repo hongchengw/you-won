@@ -127,7 +127,11 @@ describe('renderMascot', () => {
     const node = renderMascot(root, 2);
     expect(node).not.toBeNull();
     expect(node.classList.contains('mascot')).toBe(true);
-    expect(root.querySelectorAll('.mascot').length).toBe(1);
+    // Body-mounted chrome: chaos filters #app, which would stop a fixed
+    // element inside it being fixed at all.
+    expect(document.querySelectorAll('.mascot').length).toBe(1);
+    expect(root.contains(node)).toBe(false);
+    expect(node.parentElement).toBe(document.body);
   });
 
   it('draws the body parts the chaos flags degrade', () => {

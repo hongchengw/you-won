@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderWon, prizeFor } from '../src/scripts/screens/won.js';
+import { mountMuteToggle } from '../src/scripts/screens/mute.js';
 import { createStore } from '../src/scripts/store.js';
 import { createState, MAX_LEVEL } from '../src/scripts/state.js';
 
@@ -49,7 +50,7 @@ function mount(overrides = {}) {
 }
 
 const claimButton = (root) => root.querySelector('[data-action="claim"]');
-const muteButton = (root) => root.querySelector('[data-action="mute"]');
+const muteButton = () => document.querySelector('[data-action="mute"]');
 
 describe('renderWon', () => {
   beforeEach(() => {
@@ -101,17 +102,22 @@ describe('renderWon', () => {
     expect(root.querySelectorAll('.balloon').length).toBeGreaterThan(0);
   });
 
-  it('renders a mute toggle that flips muted in state', () => {
-    const { root, store, audio } = mount();
-    const button = muteButton(root);
+  it('sits under a mute toggle that flips muted in state', () => {
+    const { root, store, audio, deps } = mount();
+    // Persistent chrome, mounted by the router rather than by the screen.
+    mountMuteToggle(root, store.getState(), deps);
+    store.subscribe((state) => mountMuteToggle(root, state, deps));
+
+    const button = muteButton();
     expect(button).not.toBeNull();
+    expect(root.contains(button)).toBe(false);
     expect(store.getState().muted).toBe(false);
 
     button.click();
     expect(store.getState().muted).toBe(true);
     expect(audio.isMuted()).toBe(true);
 
-    muteButton(root).click();
+    muteButton().click();
     expect(store.getState().muted).toBe(false);
     expect(audio.isMuted()).toBe(false);
   });

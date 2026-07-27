@@ -64,6 +64,16 @@ html,
 body {
   height: 100%;
   margin: 0;
+  /* SPEC section 8: nothing overflows the viewport horizontally, at any width
+     or chaos level. `fx-shake` translates #app and `fx-spin` rotates and
+     up-scales the whole screen, both of which are meant to push past the edges
+     and neither of which may grow the page. `overflow-x` on the body alone does
+     not clip that: Chrome propagates the body's value to the viewport only
+     while the root is `visible`, so the root gets the clip too. `clip` rather
+     than `hidden` keeps neither element a scroll container, so vertical
+     scrolling stays on the viewport and every `position: fixed` corner is
+     unaffected. */
+  overflow-x: clip;
 }
 
 body {
@@ -74,7 +84,6 @@ body {
     radial-gradient(110% 85% at 88% 12%, rgba(189, 227, 255, 0.8), transparent 55%),
     linear-gradient(165deg, var(--candy-pink) 0%, var(--candy-lavender) 48%, var(--candy-mint) 100%);
   background-attachment: fixed;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1602,10 +1611,16 @@ body.fx-popups .fx-popup-layer {
 }
 
 .fx-popup {
+  --fx-popup-w: min(230px, 42vw);
+
   position: absolute;
-  left: var(--fx-popup-x, 10%);
+  /* The seeded x is a percentage, so at 390px a right-hand popup would hang its
+     close button off the edge. Junk windows are allowed to be junk; they are not
+     allowed to carry a control the visitor cannot reach. The clamp keeps the
+     whole card, tilt and all, inside the viewport at every width. */
+  left: clamp(10px, var(--fx-popup-x, 10%), calc(100% - var(--fx-popup-w) - 10px));
   top: var(--fx-popup-y, 20%);
-  width: min(230px, 42vw);
+  width: var(--fx-popup-w);
   padding: 0 0 12px;
   color: var(--ink);
   background: var(--cream);
@@ -1846,12 +1861,8 @@ body.fx-spin .screen {
   animation: fx-spin-drift calc(19s * var(--fx-speed)) ease-in-out infinite;
 }
 
-/* The rotation carries the corner controls with it, so they get pulled inboard
-   far enough that no swing of the drift can push them past an edge. */
-body.fx-spin .mute-toggle {
-  top: clamp(48px, 7vw, 76px);
-  right: clamp(48px, 7vw, 76px);
-}
+/* The mute toggle is mounted on the body, outside the screen the drift rotates,
+   so it holds its corner through all of this and needs nothing here. */
 
 @keyframes fx-spin-drift {
   0%,
@@ -2266,9 +2277,11 @@ body.fx-mascotCorrupt .mascot-speech {
   opacity: 0;
 }
 
-/* The mute toggle stays reachable here too — mute is never part of the prank —
-   but it drops the candy sticker look and any chaos the level left on it. */
-.screen-gate .mute-toggle {
+/* The mute toggle stays reachable here too, mute never being part of the prank,
+   but it drops the candy sticker look and any chaos the level left on it. It is
+   mounted on the body rather than inside the screen, so it is addressed through
+   the scene's body class. */
+body.gate-scene .mute-toggle {
   z-index: 5;
   animation: none;
   transform: none;
@@ -3424,6 +3437,18 @@ const POPUP_ADS = [
 const POPUP_INTERVAL = 4200;
 const POPUP_LIMIT = 4;
 
+// A phone has no room for four of these. Their x is clamped to keep every close
+// button on screen, which at 390px stacks them into one column where the newest
+// buries the one under it. Two never overlap, so each one can still be closed
+// when the visitor reaches it.
+const NARROW_POPUP_LIMIT = 2;
+const NARROW_WIDTH = 480;
+
+function popupLimit(doc) {
+  const width = (doc.defaultView && doc.defaultView.innerWidth) || NARROW_WIDTH;
+  return width < NARROW_WIDTH ? NARROW_POPUP_LIMIT : POPUP_LIMIT;
+}
+
 // The layer itself is pointer-transparent; only the popup cards take clicks,
 // so a stack of these can never bury the skip link.
 function startPopups(doc) {
@@ -3434,7 +3459,7 @@ function startPopups(doc) {
   let index = 0;
 
   const spawn = () => {
-    if (layer.children.length >= POPUP_LIMIT) return;
+    if (layer.children.length >= popupLimit(doc)) return;
     layer.append(buildPopup(doc, POPUP_ADS[index % POPUP_ADS.length], index));
     index += 1;
   };
@@ -3598,7 +3623,7 @@ const MASCOT_MESSAGES = {
     'Wow. You click so beautifully.',
     'I have never met a realer human!',
     'I will wait right here. However long it takes!',
-    'Take your time!! Time is a gift and you have some!'
+    'Take your time!! I have literally nothing else on!'
   ],
   // The smile is still on. The warmth is not.
   snark: [
@@ -3696,6 +3721,10 @@ let mascotBeat = 0;
 // Persistent chrome rather than a screen: the router calls this after whichever
 // screen it just mounted, so the mascot survives You Won and CAPTCHA alike. Any
 // previous mascot in the document is removed first, so there is only ever one.
+//
+// It mounts on the body, not into #app. The blob is `position: fixed` to its
+// corner, and chaos puts `filter` and animated `transform` on #app, either of
+// which would make #app its containing block and let it scroll up over the card.
 function renderMascot(root, level) {
   const doc = root.ownerDocument || document;
   doc.querySelectorAll('.mascot').forEach((node) => node.remove());
@@ -3705,13 +3734,19 @@ function renderMascot(root, level) {
 
   const mascot = buildMascot(state, level, mascotBeat);
   mascotBeat += 1;
-  root.append(mascot);
+  doc.body.append(mascot);
   return mascot;
 }
 
 // scripts/screens/mute.js
 // The persistent mute toggle. SPEC.md section 5.1: present on every screen.
 // Mute genuinely works at every level, so this is never part of the prank.
+//
+// It is mounted on the body rather than inside a screen, and that is not a
+// detail. Chaos puts `filter` and animated `transform` on #app, either of which
+// makes #app the containing block for `position: fixed` descendants. A toggle
+// pinned to the corner from inside #app stops being pinned and scrolls off the
+// top of the page with the card. Out here it stays where it was put.
 
 // Local transition: the spec's state table owns `muted`, nothing else touches it.
 function toggleMute(state) {
@@ -3733,6 +3768,18 @@ function renderMuteToggle(state, deps) {
     deps.dispatch(toggleMute);
   });
 
+  return button;
+}
+
+// Persistent chrome, like the mascot: the router mounts it after whichever
+// screen it just rendered. Any previous toggle goes first, so there is only ever
+// one and it always carries the current `muted` state.
+function mountMuteToggle(root, state, deps) {
+  const doc = root.ownerDocument || document;
+  doc.querySelectorAll('.mute-toggle').forEach((node) => node.remove());
+
+  const button = renderMuteToggle(state, deps);
+  doc.body.append(button);
   return button;
 }
 
@@ -3858,7 +3905,7 @@ function renderWon(root, state, deps) {
   const screen = document.createElement('div');
   screen.className = 'screen screen-won';
 
-  screen.append(wonDecoration(), wonCard(state, deps), renderMuteToggle(state, deps));
+  screen.append(wonDecoration(), wonCard(state, deps));
   root.replaceChildren(screen);
   return screen;
 }
@@ -5209,7 +5256,7 @@ function renderCaptcha(root, state, deps) {
   const screen = document.createElement('div');
   screen.className = 'screen screen-captcha';
 
-  screen.append(captchaCard(state, deps), renderMuteToggle(state, deps));
+  screen.append(captchaCard(state, deps));
   root.replaceChildren(screen);
   return screen;
 }
@@ -5324,7 +5371,7 @@ function renderGate(root, state, deps) {
   bloom.setAttribute('aria-hidden', 'true');
 
   const { text, beats } = gateText();
-  screen.append(bloom, gateDoors(), gateLight(), text, renderMuteToggle(state, deps));
+  screen.append(bloom, gateDoors(), gateLight(), text);
   root.replaceChildren(screen);
 
   // Freezes the chaos: gate.css pauses every leftover fx animation and hides
@@ -5376,9 +5423,12 @@ const SCREENS = {
 // everything a screen may not build for itself, so tests can inject stubs.
 // Chaos runs first so a screen renders straight into the right body classes,
 // and no screen ever has to know that chaos exists. The audio level is pushed
-// the same way, so the music sours in step with the visuals. The mascot is
-// persistent chrome rather than a screen, so it is mounted after whichever
-// screen just rendered and follows the visitor from You Won into the CAPTCHA.
+// the same way, so the music sours in step with the visuals. The mascot and the
+// mute toggle are persistent chrome rather than screens, so they are mounted
+// after whichever screen just rendered and follow the visitor from You Won into
+// the CAPTCHA. Both live on the body, outside the subtree chaos filters, because
+// a `filter` or `transform` on #app would stop them being pinned to the viewport
+// and let them scroll away with the page.
 // The cleanup registry is drained first: challenge modules and the gate scene
 // park their timers and pointer listeners there, and none of them may survive
 // the swap.
@@ -5389,6 +5439,7 @@ function createRouter(root, store, deps) {
     deps.audio.setLevel(state.level);
     const screen = SCREENS[state.screen](root, state, deps);
     renderMascot(root, state.level);
+    mountMuteToggle(root, state, deps);
     return screen;
   };
   const unsubscribe = store.subscribe(render);

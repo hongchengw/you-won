@@ -124,6 +124,18 @@ const POPUP_ADS = [
 const POPUP_INTERVAL = 4200;
 const POPUP_LIMIT = 4;
 
+// A phone has no room for four of these. Their x is clamped to keep every close
+// button on screen, which at 390px stacks them into one column where the newest
+// buries the one under it. Two never overlap, so each one can still be closed
+// when the visitor reaches it.
+const NARROW_POPUP_LIMIT = 2;
+const NARROW_WIDTH = 480;
+
+function popupLimit(doc) {
+  const width = (doc.defaultView && doc.defaultView.innerWidth) || NARROW_WIDTH;
+  return width < NARROW_WIDTH ? NARROW_POPUP_LIMIT : POPUP_LIMIT;
+}
+
 // The layer itself is pointer-transparent; only the popup cards take clicks,
 // so a stack of these can never bury the skip link.
 function startPopups(doc) {
@@ -134,7 +146,7 @@ function startPopups(doc) {
   let index = 0;
 
   const spawn = () => {
-    if (layer.children.length >= POPUP_LIMIT) return;
+    if (layer.children.length >= popupLimit(doc)) return;
     layer.append(buildPopup(doc, POPUP_ADS[index % POPUP_ADS.length], index));
     index += 1;
   };

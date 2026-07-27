@@ -255,9 +255,17 @@ describe('renderCaptcha', () => {
     expect(root.querySelectorAll('[data-action="verify"]').length).toBe(1);
   });
 
-  it('renders the persistent mute toggle', () => {
-    const { root } = mount();
-    expect(root.querySelector('[data-action="mute"]')).not.toBeNull();
+  it('is mounted under the persistent mute toggle, which the router owns', () => {
+    const root = document.createElement('div');
+    document.body.replaceChildren(root);
+
+    const store = createStore({ ...createState(), screen: 'captcha' });
+    createRouter(root, store, { dispatch: store.dispatch, audio: stubAudio() });
+
+    const button = document.querySelector('[data-action="mute"]');
+    expect(button).not.toBeNull();
+    // Not inside #app: chaos filters that subtree, which would unpin it.
+    expect(root.contains(button)).toBe(false);
   });
 });
 

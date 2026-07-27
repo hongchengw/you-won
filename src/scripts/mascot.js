@@ -38,7 +38,7 @@ export const MASCOT_MESSAGES = {
     'Wow. You click so beautifully.',
     'I have never met a realer human!',
     'I will wait right here. However long it takes!',
-    'Take your time!! Time is a gift and you have some!'
+    'Take your time!! I have literally nothing else on!'
   ],
   // The smile is still on. The warmth is not.
   snark: [
@@ -136,6 +136,10 @@ let mascotBeat = 0;
 // Persistent chrome rather than a screen: the router calls this after whichever
 // screen it just mounted, so the mascot survives You Won and CAPTCHA alike. Any
 // previous mascot in the document is removed first, so there is only ever one.
+//
+// It mounts on the body, not into #app. The blob is `position: fixed` to its
+// corner, and chaos puts `filter` and animated `transform` on #app, either of
+// which would make #app its containing block and let it scroll up over the card.
 export function renderMascot(root, level) {
   const doc = root.ownerDocument || document;
   doc.querySelectorAll('.mascot').forEach((node) => node.remove());
@@ -145,6 +149,6 @@ export function renderMascot(root, level) {
 
   const mascot = buildMascot(state, level, mascotBeat);
   mascotBeat += 1;
-  root.append(mascot);
+  doc.body.append(mascot);
   return mascot;
 }

@@ -12,7 +12,6 @@
 import { fail, skip, captchaFor, canSkip } from '../state.js';
 import { registerCleanup } from '../cleanup.js';
 import { CAPTCHA_MODULES } from '../captchas/index.js';
-import { renderMuteToggle } from './mute.js';
 
 // SPEC section 5.2, verbatim, indexed by `fails` after the increment.
 export const REJECTIONS = [
@@ -194,7 +193,7 @@ export function renderCaptcha(root, state, deps) {
   const screen = document.createElement('div');
   screen.className = 'screen screen-captcha';
 
-  screen.append(captchaCard(state, deps), renderMuteToggle(state, deps));
+  screen.append(captchaCard(state, deps));
   root.replaceChildren(screen);
   return screen;
 }
