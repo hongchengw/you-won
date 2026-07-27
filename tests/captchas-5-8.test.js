@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import puzzleCaptcha from '../src/scripts/captchas/puzzle.js';
 import distortedTextCaptcha, { distortedTextFor } from '../src/scripts/captchas/distortedText.js';
-import timerCaptcha, { timerValueFor } from '../src/scripts/captchas/timer.js';
+import timerCaptcha, { timerValueFor, TIMER_ATTEMPT_TICKS } from '../src/scripts/captchas/timer.js';
 import rotateCaptcha, { ROTATE_REJECTION } from '../src/scripts/captchas/rotate.js';
 import { CAPTCHA_MODULES } from '../src/scripts/captchas/index.js';
 import { renderCaptcha } from '../src/scripts/screens/captcha.js';
 import { runCleanup } from '../src/scripts/cleanup.js';
-import { createState } from '../src/scripts/state.js';
+import { createState, SKIP_THRESHOLD } from '../src/scripts/state.js';
 import { createStore } from '../src/scripts/store.js';
 
 // SPEC.md section 6, rows 5-8. The four time and input challenges. Same rule as
@@ -389,13 +389,14 @@ describe('timer', () => {
     const { root, store } = mountShell(7);
     expect(root.querySelector('[data-action="skip"]').hidden).toBe(true);
 
-    // Six self-rejection cycles. The shell re-renders each time, which remounts
-    // the module and restarts its cycle, so the clock is advanced per attempt.
-    for (let attempt = 0; attempt < 6; attempt += 1) {
-      vi.advanceTimersByTime(8000);
+    // One self-rejection cycle per fail the threshold asks for. The shell
+    // re-renders each time, which remounts the module and restarts its cycle,
+    // so the clock is advanced per attempt.
+    for (let attempt = 0; attempt < SKIP_THRESHOLD; attempt += 1) {
+      vi.advanceTimersByTime(TIMER_ATTEMPT_TICKS * 1000);
     }
 
-    expect(store.getState().fails).toBeGreaterThanOrEqual(6);
+    expect(store.getState().fails).toBeGreaterThanOrEqual(SKIP_THRESHOLD);
     expect(root.querySelector('[data-action="skip"]').hidden).toBe(false);
   });
 });

@@ -3059,7 +3059,7 @@ const CAPTCHA_ORDER = [
 ];
 
 const MAX_LEVEL = 8;
-const SKIP_THRESHOLD = 6;
+const SKIP_THRESHOLD = 3;
 
 function createState() {
   return {
@@ -4798,7 +4798,7 @@ const __default_scripts_captchas_distortedText_js = {
 //
 // VERIFY is disabled here, which is the point: there is no button to fail on.
 // So the challenge fails itself on a cycle instead, and the fail count still
-// climbs to six and still earns the skip link. Without that this level would be
+// climbs to three and still earns the skip link. Without that this level would be
 // a dead end, and a dead end is not a joke.
 
 // The published countdown. Hand written rather than generated so the shape is
@@ -4822,7 +4822,7 @@ const TIMER_GLITCH_FROM = 4;
 // fault rather than as progress.
 const TIMER_GLITCH_TEXT = ['--', 'NaN', '∞', '0x1F', '???'];
 
-// One self-rejection every eight ticks. Six of those is the skip link.
+// One self-rejection every eight ticks. Three of those is the skip link.
 const TIMER_ATTEMPT_TICKS = 8;
 
 const TIMER_STATUS = [
@@ -5076,12 +5076,11 @@ function captchaModule(id) {
 // may never make it unreachable.
 
 
-// SPEC section 5.2, verbatim, indexed by `fails` after the increment.
+// SPEC section 5.2, verbatim, indexed by `fails` after the increment. Exactly
+// SKIP_THRESHOLD entries, so the escalation lands its last line on the rejection
+// that earns the skip link and the fallback picks up one past it.
 const REJECTIONS = [
   'Incorrect. Please try again.',
-  'Incorrect. Please focus.',
-  "Still incorrect. Are you sure you're human?",
-  "Hmm. That's not it either.",
   'Are you even trying?',
   'Verification confidence: 0%. This is going badly.'
 ];
@@ -5203,7 +5202,7 @@ function captchaCard(state, deps) {
   fineprint.textContent = FINE_PRINT;
 
   // Always in the DOM so the card never reflows when it appears, and simply
-  // hidden until the sixth rejection earns it.
+  // hidden until the third rejection earns it.
   const skipLink = document.createElement('button');
   skipLink.type = 'button';
   skipLink.className = 'captcha-skip';

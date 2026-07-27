@@ -32,9 +32,9 @@ describe('constants', () => {
     ]);
   });
 
-  it('caps the gauntlet at 8 levels and 6 fails before skipping', () => {
+  it('caps the gauntlet at 8 levels and 3 fails before skipping', () => {
     expect(MAX_LEVEL).toBe(8);
-    expect(SKIP_THRESHOLD).toBe(6);
+    expect(SKIP_THRESHOLD).toBe(3);
   });
 });
 
@@ -116,12 +116,12 @@ describe('skip', () => {
 });
 
 describe('canSkip', () => {
-  it('is false below 6 fails and true at 6 and above', () => {
+  it('is false below the threshold and true at the threshold and above', () => {
     for (let fails = 0; fails < SKIP_THRESHOLD; fails += 1) {
       expect(canSkip(at({ screen: 'captcha', fails }))).toBe(false);
     }
-    expect(canSkip(at({ screen: 'captcha', fails: 6 }))).toBe(true);
-    expect(canSkip(at({ screen: 'captcha', fails: 7 }))).toBe(true);
+    expect(canSkip(at({ screen: 'captcha', fails: SKIP_THRESHOLD }))).toBe(true);
+    expect(canSkip(at({ screen: 'captcha', fails: SKIP_THRESHOLD + 1 }))).toBe(true);
     expect(canSkip(at({ screen: 'captcha', fails: 99 }))).toBe(true);
   });
 });

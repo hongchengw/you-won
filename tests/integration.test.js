@@ -109,7 +109,7 @@ function failOnce(root, store, level) {
   expect(store.getState().fails, `level ${level}: never rejected itself`).toBe(before + 1);
 }
 
-// CLAIM, six rejections, then skip. Returns the id of the challenge that was
+// CLAIM, SKIP_THRESHOLD rejections, then skip. Returns the id of the challenge that was
 // actually mounted, so the caller can check the running order.
 function playLevel(root, store) {
   const level = store.getState().level;
@@ -165,7 +165,7 @@ describe('a full playthrough', () => {
     expect(root.querySelector('.screen-gate')).toBeTruthy();
   });
 
-  it('offers a usable skip link at every level after six rejections', () => {
+  it('offers a usable skip link at every level after three rejections', () => {
     const { root, store } = mountApp();
 
     for (let loop = 0; loop < MAX_LEVEL; loop += 1) {

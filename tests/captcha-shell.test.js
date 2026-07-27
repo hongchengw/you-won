@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   renderCaptcha,
   rejectionFor,
+  REJECTIONS,
   SKIP_MESSAGE
 } from '../src/scripts/screens/captcha.js';
 import { runCleanup } from '../src/scripts/cleanup.js';
@@ -13,9 +14,6 @@ import { createState, CAPTCHA_ORDER, SKIP_THRESHOLD, MAX_LEVEL } from '../src/sc
 // SPEC.md section 5.2, verbatim. The shell must not improvise this copy.
 const SPEC_REJECTIONS = [
   'Incorrect. Please try again.',
-  'Incorrect. Please focus.',
-  "Still incorrect. Are you sure you're human?",
-  "Hmm. That's not it either.",
   'Are you even trying?',
   'Verification confidence: 0%. This is going badly.'
 ];
@@ -98,16 +96,25 @@ const errorRegion = (root) => root.querySelector('.captcha-error');
 const isHidden = (node) => node === null || node.hidden === true;
 
 describe('rejectionFor', () => {
-  it('returns the exact SPEC 5.2 strings for 1 through 6', () => {
+  it('returns the exact SPEC 5.2 strings for 1 through 3', () => {
     SPEC_REJECTIONS.forEach((message, index) => {
       expect(rejectionFor(index + 1)).toBe(message);
     });
   });
 
-  it('falls back to the attempt form from 7 onwards', () => {
-    expect(rejectionFor(7)).toBe('Incorrect. (attempt 7)');
+  it('falls back to the attempt form from 4 onwards', () => {
+    expect(rejectionFor(4)).toBe('Incorrect. (attempt 4)');
     expect(rejectionFor(8)).toBe('Incorrect. (attempt 8)');
     expect(rejectionFor(42)).toBe('Incorrect. (attempt 42)');
+  });
+
+  // SPEC 5.2's invariant. The escalation runs out exactly when the skip link
+  // arrives, so moving SKIP_THRESHOLD is a spec change rather than a copy edit
+  // someone forgets.
+  it('runs out of escalation exactly when the skip link is earned', () => {
+    expect(REJECTIONS.length).toBe(SKIP_THRESHOLD);
+    expect(rejectionFor(SKIP_THRESHOLD)).toBe(REJECTIONS[REJECTIONS.length - 1]);
+    expect(rejectionFor(SKIP_THRESHOLD + 1)).toBe(`Incorrect. (attempt ${SKIP_THRESHOLD + 1})`);
   });
 
   it('says nothing before the first rejection', () => {
@@ -186,7 +193,7 @@ describe('renderCaptcha', () => {
       expect(errorRegion(root).textContent).toBe(message);
     });
     verifyButton(root).click();
-    expect(errorRegion(root).textContent).toBe('Incorrect. (attempt 7)');
+    expect(errorRegion(root).textContent).toBe(`Incorrect. (attempt ${SPEC_REJECTIONS.length + 1})`);
   });
 
   it('shows no error before the first attempt', () => {
@@ -211,7 +218,7 @@ describe('renderCaptcha', () => {
     }
   });
 
-  it('reveals the skip link after six live rejections', () => {
+  it('reveals the skip link after three live rejections', () => {
     const { root } = mount();
     for (let attempt = 0; attempt < SKIP_THRESHOLD; attempt += 1) {
       expect(isHidden(skipButton(root))).toBe(true);

@@ -13,12 +13,11 @@ import { fail, skip, captchaFor, canSkip } from '../state.js';
 import { registerCleanup } from '../cleanup.js';
 import { CAPTCHA_MODULES } from '../captchas/index.js';
 
-// SPEC section 5.2, verbatim, indexed by `fails` after the increment.
+// SPEC section 5.2, verbatim, indexed by `fails` after the increment. Exactly
+// SKIP_THRESHOLD entries, so the escalation lands its last line on the rejection
+// that earns the skip link and the fallback picks up one past it.
 export const REJECTIONS = [
   'Incorrect. Please try again.',
-  'Incorrect. Please focus.',
-  "Still incorrect. Are you sure you're human?",
-  "Hmm. That's not it either.",
   'Are you even trying?',
   'Verification confidence: 0%. This is going badly.'
 ];
@@ -140,7 +139,7 @@ function captchaCard(state, deps) {
   fineprint.textContent = FINE_PRINT;
 
   // Always in the DOM so the card never reflows when it appears, and simply
-  // hidden until the sixth rejection earns it.
+  // hidden until the third rejection earns it.
   const skipLink = document.createElement('button');
   skipLink.type = 'button';
   skipLink.className = 'captcha-skip';

@@ -2,6 +2,19 @@
 
 Newest entries at the top. Times are EDT.
 
+## T12 — Skip at three rejections
+
+**2026-07-27 1:28 AM EDT**
+
+- **`SKIP_THRESHOLD` is 3, down from 6.** Failing the same check over and over is the only route through the app, since every `verify()` returns `false` unconditionally and the skip link is the sole exit. That route now costs three rejections instead of six. `SKIP_THRESHOLD` is read only by `canSkip()` and `captcha.css` has no coupling to the count, so the mechanical change was one number in `state.js`.
+- **Compressed the escalating rejection copy to three lines.** The copy is indexed by the fail count, so a lower threshold would have stranded half of it, punchline included: `Verification confidence: 0%. This is going badly.` used to be line 6 and would never have been seen. The table is now `Incorrect. Please try again.`, `Are you even trying?`, `Verification confidence: 0%. This is going badly.`, then `Incorrect. (attempt N)` from 4 onwards. Cut `Incorrect. Please focus.`, `Still incorrect. Are you sure you're human?` and `Hmm. That's not it either.` `rejectionFor()` is unchanged: it is driven by `REJECTIONS.length`, so the fallback moved to `fails >= 4` for free.
+- **Added the invariant that keeps the two from drifting apart**, in SPEC section 5.2 and as a test: the table has exactly `SKIP_THRESHOLD` entries, so its last line lands on the rejection that earns the skip link and the fallback begins one past it. Any future threshold move is now a spec change that the suite enforces, rather than a copy edit someone forgets.
+- Updated SPEC section 5.2: the mirrored `SKIP_THRESHOLD = 3`, the new table, and the skip link paragraph now reading `fails < SKIP_THRESHOLD` / `fails >= SKIP_THRESHOLD` rather than a hardcoded 6.
+- Rewrote the tests and prose that carried the old number. `state.test.js` asserts the threshold is 3 and states `canSkip` in terms of `SKIP_THRESHOLD` rather than a literal. `captcha-shell.test.js` carries the three new spec strings verbatim, checks `rejectionFor(4)` is `Incorrect. (attempt 4)` with 8 and 42 keeping the form, and adds the table-to-threshold guard. The timer test in `captchas-5-8.test.js` now derives its loop from `SKIP_THRESHOLD` and `TIMER_ATTEMPT_TICKS` instead of the hardcoded 6 and 8000. Stale comments in `captcha.js` ("until the sixth rejection") and `timer.js` ("climbs to six", "Six of those is the skip link") corrected; the 6 in the timer's countdown-floor comment is a different number and was left alone. 252 tests green.
+- Verified in the built `dist/index.html` in headless Chrome, driving the real UI through all eight loops and the gate: three rejections reveal the skip link on every level, the copy arrives in the new order, `Incorrect. (attempt 4)` and `(attempt 5)` follow the third line, every skip link is clickable, and the gate still resets to a fresh loop 1.
+- Confirmed the two wanted side effects rather than assuming them. Level 7 (`timer`, which has no VERIFY button and rejects itself every 8 seconds) earned a visible, clickable skip link with zero clicks in a measured 24.0 seconds, down from 48. Level 5's puzzle floor drops from 60 seconds to 30, since the challenge auto-fails at ten seconds per attempt.
+- Rebuilt `dist/index.html`, committed alongside the source: one file, 150544 bytes, zero external references.
+
 ## T11 — Responsive pass, polish, full playthrough
 
 **2026-07-26 11:33 PM EDT**

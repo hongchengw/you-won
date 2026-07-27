@@ -36,7 +36,7 @@ export const CAPTCHA_ORDER = [
   'puzzle', 'distortedText', 'timer', 'rotate'
 ];
 export const MAX_LEVEL = 8;
-export const SKIP_THRESHOLD = 6;
+export const SKIP_THRESHOLD = 3;
 ```
 
 **Shape**
@@ -117,17 +117,16 @@ The shell around all 8 challenge modules. Renders a fake verification card: titl
 
 ```
 1  Incorrect. Please try again.
-2  Incorrect. Please focus.
-3  Still incorrect. Are you sure you're human?
-4  Hmm. That's not it either.
-5  Are you even trying?
-6  Verification confidence: 0%. This is going badly.
-7+ Incorrect. (attempt N)
+2  Are you even trying?
+3  Verification confidence: 0%. This is going badly.
+4+ Incorrect. (attempt N)
 ```
 
 `rejectionFor(fails)` is a pure function and is unit-tested.
 
-**Skip link.** Hidden while `fails < 6`. At `fails >= 6` a small, low-contrast `skip verification →` link fades in. Clicking it shows `VERIFICATION FAILED — returning to prize claim`, then dispatches `skip()`. At high chaos it drifts around, subject to the hard rule in §4.
+**Invariant.** The table has exactly `SKIP_THRESHOLD` entries. Its last line therefore lands on the rejection that earns the skip link, and the `Incorrect. (attempt N)` fallback begins one past it. Moving the threshold moves the table with it.
+
+**Skip link.** Hidden while `fails < SKIP_THRESHOLD`. At `fails >= SKIP_THRESHOLD` a small, low-contrast `skip verification →` link fades in. Clicking it shows `VERIFICATION FAILED — returning to prize claim`, then dispatches `skip()`. At high chaos it drifts around, subject to the hard rule in §4.
 
 ### 5.3 Gate (`screens/gate.js` + `gate.css`)
 

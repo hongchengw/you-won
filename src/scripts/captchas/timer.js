@@ -6,7 +6,7 @@
 //
 // VERIFY is disabled here, which is the point: there is no button to fail on.
 // So the challenge fails itself on a cycle instead, and the fail count still
-// climbs to six and still earns the skip link. Without that this level would be
+// climbs to three and still earns the skip link. Without that this level would be
 // a dead end, and a dead end is not a joke.
 
 // The published countdown. Hand written rather than generated so the shape is
@@ -30,7 +30,7 @@ const TIMER_GLITCH_FROM = 4;
 // fault rather than as progress.
 const TIMER_GLITCH_TEXT = ['--', 'NaN', '∞', '0x1F', '???'];
 
-// One self-rejection every eight ticks. Six of those is the skip link.
+// One self-rejection every eight ticks. Three of those is the skip link.
 export const TIMER_ATTEMPT_TICKS = 8;
 
 const TIMER_STATUS = [

@@ -8,7 +8,7 @@ export const CAPTCHA_ORDER = [
 ];
 
 export const MAX_LEVEL = 8;
-export const SKIP_THRESHOLD = 6;
+export const SKIP_THRESHOLD = 3;
 
 export function createState() {
   return {
