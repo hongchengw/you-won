@@ -31,6 +31,9 @@ function stubAudio() {
     stopMusic() {
       order.push('stopMusic');
     },
+    startMusic() {
+      order.push('startMusic');
+    },
     holyPad(seconds) {
       order.push('holyPad');
       padSeconds.push(seconds);
@@ -170,6 +173,25 @@ describe('the gate scene', () => {
 
     expect(root.querySelector('.screen-gate')).toBeNull();
     expect(store.getState().screen).toBe('won');
+  });
+
+  it('hands the melody back on the way out', () => {
+    const { store, audio } = mountScene();
+    // Puts the reset itself in the same sequence, so the restart can be placed
+    // against it rather than merely counted.
+    store.subscribe((state) => {
+      if (state.screen === 'won' && state.level === 1) audio.order.push('reset');
+    });
+
+    vi.advanceTimersByTime(GATE_TIMING.cut - 1);
+    expect(audio.order).toEqual(['stopMusic', 'holyPad']);
+
+    vi.advanceTimersByTime(1);
+
+    // The whole arc of the scene's audio: chaos music out, chord in, then loop
+    // 1's sweet in-tune melody back with everything else the reset brings.
+    expect(audio.order).toEqual(['stopMusic', 'holyPad', 'reset', 'startMusic']);
+    expect(store.getState()).toMatchObject({ screen: 'won', level: 1 });
   });
 
   it('gives the last line about six seconds to land', () => {

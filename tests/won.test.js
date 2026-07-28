@@ -29,7 +29,8 @@ function stubAudio() {
     },
     buzz() {},
     holyPad() {},
-    stopMusic() {}
+    stopMusic() {},
+    startMusic() {}
   };
 }
 

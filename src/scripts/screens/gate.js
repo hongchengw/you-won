@@ -143,6 +143,10 @@ export function renderGate(root, state, deps) {
   at(GATE_TIMING.cut, () => {
     doc.body.classList.remove('gate-scene');
     deps.dispatch(reset);
+    // The melody comes back with everything else the reset brings. The pad's
+    // release tail overlapping it is intended: at level 1 the tune is sweet and
+    // in tune, so it settles into the chord rather than fighting it.
+    deps.audio.startMusic();
   });
 
   registerCleanup(() => {

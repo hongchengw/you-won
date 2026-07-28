@@ -38,7 +38,8 @@ function stubAudio() {
       calls.buzz += 1;
     },
     holyPad() {},
-    stopMusic() {}
+    stopMusic() {},
+    startMusic() {}
   };
 }
 

@@ -2,6 +2,20 @@
 
 Newest entries at the top. Times are EDT.
 
+## T15 — The melody comes back with the reset
+
+**2026-07-27 10:45 PM EDT**
+
+- **Fixed the app going silent forever after the first gate.** `loop()` ran only from `start()`, which is guarded by `isStarted()` and only ever fires on the first CLAIM. The gate called `stopMusic()`, which clears the timer for good, and nothing anywhere restarted it. Every loop from the second onwards had no music at all, which contradicts SPEC §7's level-scaled melody and quietly threw away the best part of the reset: sweet, in-tune, level 1 music returning as though nothing had happened is the joke. T14 made it worse, because the longer pad's own tail became the last music anyone would ever hear.
+- **Added `startMusic()` beside `stopMusic()` as its mirror.** Guarded on both sides, `!isStarted() || timer !== null`, so it is safe to call from anywhere and can never stack a second loop on top of a running one, which would have played the melody at double speed. It resets `step` to 0, so loop 1 starts at the top of the phrase rather than halfway through whatever the gate cut off. Added to the returned API next to `stopMusic`.
+- **The gate calls it in the cut callback, immediately after `deps.dispatch(reset)`**, so the music comes back with the chaos classes, the mascot and the prize rather than a moment later. The pad's release tail overlapping the restarted melody is intended: at level 1 the tune is sweet and in tune, so it settles into the chord rather than fighting it.
+- Wrote the failing tests first, six of them. `audio.test.js` pins the three ways a mirror can be got wrong: not resuming (no notes while stopped, notes again once called), resuming twice (two `startMusic()` calls schedule exactly as many notes as one), and resuming mid-phrase (the restart's first note is the phrase's opening note). Plus the no-op before `start()`, there being no context to schedule against. `gate.test.js` pins the whole audio arc of the scene as an ordered sequence with the reset itself in it, `stopMusic`, `holyPad`, `reset`, `startMusic`, so the restart is placed against the dispatch rather than merely counted. `integration.test.js` gained the one that reproduces the bug end to end: the real engine over a recording `AudioContext`, driven through all eight loops and the gate, then counting notes on loop 1. It failed with `expected 0 to be greater than 0`, which is the silence itself. 271 green.
+- **Added `startMusic` to every audio stub in the suite**, in `gate.test.js`, `integration.test.js`, `captcha-shell.test.js`, `captchas-5-8.test.js` and `won.test.js`. Only the first two reach the cut, but a stub that does not match the real interface turns a future change into `undefined is not a function` thrown from inside a timer callback, a long way from its cause.
+- Updated SPEC §7: the melody restarts on reset, why, and `startMusic` in the API line, so the next person reading the spec does not reintroduce the bug.
+- Verified against the built `dist/index.html` in headless Chrome over the DevTools protocol, with a recording `AudioContext` installed ahead of the bundle so the count is of what the real engine schedules. Played through all eight loops, let the gate cut, and measured a clean window on loop 1: 16 notes in 4 seconds, which is the level 1 tempo of 0.26s per note. Exactly one `AudioContext` for the whole session, before and after the reset, so the context survives and only the loop restarts. The reset itself lands correctly with `chaos=1` and the first prize back.
+- **Not verified: heard unmuted.** The T14 note still stands unresolved as well, so the pad's tail fading out over the returning melody is untested by ear.
+- Rebuilt `dist/index.html` and committed it alongside the source.
+
 ## T14 — The gate holds its last line
 
 **2026-07-27 10:35 PM EDT**

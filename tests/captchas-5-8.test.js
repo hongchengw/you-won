@@ -113,7 +113,8 @@ function stubAudio() {
     blip() {},
     buzz() {},
     holyPad() {},
-    stopMusic() {}
+    stopMusic() {},
+    startMusic() {}
   };
 }
 

@@ -9,6 +9,7 @@ import { CAPTCHA_MODULES } from '../src/scripts/captchas/index.js';
 import { SKIP_DELAY } from '../src/scripts/screens/captcha.js';
 import { GATE_TIMING } from '../src/scripts/screens/gate.js';
 import { LEVEL_FLAGS } from '../src/scripts/chaos.js';
+import { createAudio } from '../src/scripts/audio.js';
 
 // The whole thing, end to end, through the real store, the real router, the
 // real chaos engine and all eight real challenges. Every other suite proves one
@@ -33,7 +34,16 @@ function stubCanvas() {
 }
 
 function stubAudio() {
-  const calls = { start: 0, blip: 0, buzz: 0, holyPad: 0, stopMusic: 0, levels: [], muted: [] };
+  const calls = {
+    start: 0,
+    blip: 0,
+    buzz: 0,
+    holyPad: 0,
+    stopMusic: 0,
+    startMusic: 0,
+    levels: [],
+    muted: []
+  };
   let started = false;
   return {
     calls,
@@ -60,8 +70,52 @@ function stubAudio() {
     },
     stopMusic() {
       calls.stopMusic += 1;
+    },
+    startMusic() {
+      calls.startMusic += 1;
     }
   };
+}
+
+// Just enough Web Audio to count what the engine schedules. Used where a stub
+// will not do, because "the music comes back" is a claim about the real engine
+// running through the real app rather than about a method being called.
+function recordingCtor() {
+  const log = { contexts: [], oscillators: [] };
+  const param = () => ({
+    value: 0,
+    setValueAtTime() {},
+    linearRampToValueAtTime() {},
+    cancelScheduledValues() {}
+  });
+  const node = (kind, extra = {}) => {
+    const self = { kind, connect: () => self, disconnect: () => self, ...extra };
+    return self;
+  };
+  const Ctor = function RecordingAudioContext() {
+    const context = {
+      currentTime: 0,
+      state: 'running',
+      destination: {},
+      resume() {},
+      createOscillator() {
+        const osc = node('oscillator', {
+          type: 'sine',
+          frequency: param(),
+          detune: param(),
+          start() {},
+          stop() {}
+        });
+        log.oscillators.push(osc);
+        return osc;
+      },
+      createGain: () => node('gain', { gain: param() }),
+      createBiquadFilter: () => node('filter', { frequency: param(), Q: param() })
+    };
+    log.contexts.push(context);
+    return context;
+  };
+  return { Ctor, log };
 }
 
 function mountApp() {
@@ -341,6 +395,35 @@ describe('after the gate', () => {
     expect(store.getState().screen).toBe('gate');
     // The AudioContext survived the reset, so it is never built twice.
     expect(audio.calls.start).toBe(audioBefore);
+  });
+
+  it('gives the second playthrough its music back', () => {
+    const { Ctor, log } = recordingCtor();
+    const root = document.createElement('div');
+    root.id = 'app';
+    document.body.replaceChildren(root);
+
+    // The real engine, so this is the melody itself rather than a call count.
+    const audio = createAudio({ AudioContextCtor: Ctor });
+    const store = start(root, { audio });
+
+    const notesOver = (ms) => {
+      const before = log.oscillators.length;
+      vi.advanceTimersByTime(ms);
+      return log.oscillators.length - before;
+    };
+
+    expect(playThrough(root, store)).toEqual(CAPTCHA_ORDER);
+    vi.advanceTimersByTime(GATE_TIMING.cut);
+    expect(store.getState()).toMatchObject({ screen: 'won', level: 1 });
+
+    // The bug this guards: the gate's stopMusic() ended the loop for good, so
+    // every loop after the first ran in silence.
+    expect(notesOver(3000)).toBeGreaterThan(0);
+
+    // One context for the whole session. The context survives; only the loop
+    // restarts, so nothing here can be passing because audio was rebuilt.
+    expect(log.contexts.length).toBe(1);
   });
 });
 

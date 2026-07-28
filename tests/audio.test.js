@@ -384,6 +384,75 @@ describe('the holy pad envelope', () => {
   });
 });
 
+// The gate stops the melody for good, so without a way back the app is silent
+// for every loop after the first. startMusic() is the mirror of stopMusic(), and
+// these pin the three ways a mirror can be got wrong: not resuming, resuming
+// twice, and resuming halfway through the phrase.
+describe('startMusic', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // Notes are one oscillator each, so counting them counts the melody.
+  const notesOver = (log, ms) => {
+    const before = log.oscillators.length;
+    vi.advanceTimersByTime(ms);
+    return log.oscillators.length - before;
+  };
+
+  it('brings the melody back after stopMusic() has ended it', () => {
+    const { audio, log } = setup();
+    audio.start();
+    expect(notesOver(log, 2000)).toBeGreaterThan(0);
+
+    audio.stopMusic();
+    expect(notesOver(log, 3000)).toBe(0);
+
+    audio.startMusic();
+    expect(notesOver(log, 2000)).toBeGreaterThan(0);
+  });
+
+  it('is a no-op before start(), there being no context to schedule against', () => {
+    const { audio, log } = setup();
+    expect(() => audio.startMusic()).not.toThrow();
+    vi.advanceTimersByTime(3000);
+    expect(log.contexts.length).toBe(0);
+    expect(audio.isStarted()).toBe(false);
+  });
+
+  it('does not stack a second loop when called twice', () => {
+    const single = setup();
+    single.audio.start();
+    const solo = notesOver(single.log, 3000);
+
+    const doubled = setup();
+    doubled.audio.start();
+    doubled.audio.startMusic();
+    doubled.audio.startMusic();
+
+    expect(notesOver(doubled.log, 3000)).toBe(solo);
+  });
+
+  it('restarts at the top of the phrase, which is what a total reset means', () => {
+    const { audio, log } = setup();
+    audio.start();
+    const opening = log.oscillators[0].frequency.value;
+
+    // Far enough in that the phrase is nowhere near its first note.
+    vi.advanceTimersByTime(2000);
+    audio.stopMusic();
+
+    log.oscillators.length = 0;
+    audio.startMusic();
+    vi.advanceTimersByTime(1);
+    expect(log.oscillators[0].frequency.value).toBe(opening);
+  });
+});
+
 describe('tempoFor and detuneFor', () => {
   it('gets monotonically faster from level 1 to 8', () => {
     for (let level = 2; level <= MAX_LEVEL; level += 1) {
@@ -419,7 +488,8 @@ describe('router audio wiring', () => {
       blip() {},
       buzz() {},
       holyPad() {},
-      stopMusic() {}
+      stopMusic() {},
+      startMusic() {}
     };
 
     const root = document.createElement('div');

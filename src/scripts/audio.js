@@ -125,6 +125,18 @@ export function createAudio({ AudioContextCtor = globalThis.AudioContext } = {})
     timer = null;
   };
 
+  // The mirror of stopMusic(), for the gate: it stops the melody for good, so
+  // without this every loop after the first runs in silence. Guarded on both
+  // sides, so it is safe to call from anywhere and can never stack a second
+  // loop on top of a running one. The step goes back to 0 because a total reset
+  // means loop 1 starts at the top of the phrase, not halfway through whatever
+  // the gate cut off.
+  const startMusic = () => {
+    if (!isStarted() || timer !== null) return;
+    step = 0;
+    loop();
+  };
+
   const start = () => {
     if (isStarted()) return;
 
@@ -198,6 +210,7 @@ export function createAudio({ AudioContextCtor = globalThis.AudioContext } = {})
     blip,
     buzz,
     holyPad,
-    stopMusic
+    stopMusic,
+    startMusic
   };
 }

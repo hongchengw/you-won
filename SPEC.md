@@ -183,9 +183,10 @@ Two optional fields let a module tell the shell about itself:
 - **Background:** a short looping square/triangle "MIDI" melody. Tempo and detune scale with chaos level — sweet and in tune at level 1, fast and sour at level 8.
 - **SFX:** click blip on button presses, harsh buzz on every rejection.
 - **Gate:** chaos music stops; a swelling sine/triangle major-chord pad plays with a slow attack. It sustains at full level for a length the gate passes in, so the scene never runs on into silence, and releases just past the cut.
+- **The melody restarts on reset.** The gate stops it for good, so the cut calls `startMusic()` alongside `reset()` and loop 1 gets its sweet, in-tune music back from the top of the phrase. Without that every loop after the first plays in silence, which contradicts the level-scaled melody above and throws away the best part of the reset. The `AudioContext` is never rebuilt: only the loop restarts.
 - **Mute genuinely works at every level.** This is not part of the prank. People run this at a desk.
 
-API: `createAudio({ AudioContextCtor })` → `{ start, setLevel, setMuted, isStarted, isMuted, blip, buzz, holyPad, stopMusic }`.
+API: `createAudio({ AudioContextCtor })` → `{ start, setLevel, setMuted, isStarted, isMuted, blip, buzz, holyPad, stopMusic, startMusic }`.
 
 ---
 
