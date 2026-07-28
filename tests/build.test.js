@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { globSync } from 'node:fs';
 import { repoPath } from './helpers/paths.js';
-import { escapeInline, inject } from '../build/build.js';
+import { escapeInline, inject, normalizeNewlines } from '../build/build.js';
 import { CAPTCHA_MODULES } from '../src/scripts/captchas/index.js';
 import { CAPTCHA_ORDER } from '../src/scripts/state.js';
 
@@ -76,7 +76,9 @@ describe('build output', () => {
     const files = listFiles('src/styles/*.css');
     expect(files.length).toBeGreaterThan(0);
     for (const file of files) {
-      const css = readFileSync(file, 'utf8').trim();
+      // Normalised to match the build, which emits one line ending regardless
+      // of what the checkout wrote to disk.
+      const css = normalizeNewlines(readFileSync(file, 'utf8')).trim();
       expect(html, `missing css from ${file}`).toContain(css);
     }
   });
@@ -138,19 +140,42 @@ describe('content security policy', () => {
     expect(policy()).toContain("form-action 'none'");
   });
 
-  // The app sets element.style throughout and hashes do not cover style
-  // attributes, so this one genuinely has to stay open.
-  it('allows the inline stylesheet', () => {
-    expect(policy()).toContain("style-src 'unsafe-inline'");
+  // Both inline blocks are pinned by hash, so nothing has to be waved through.
+  // CSP governs style *attributes*, which the app has none of; it does not
+  // govern the CSSOM property setters the app actually uses.
+  it('opens no escape hatch at all', () => {
+    expect(policy()).not.toContain('unsafe-inline');
+    expect(policy()).not.toContain('unsafe-eval');
+    expect(policy()).not.toContain('unsafe-hashes');
+  });
+
+  // Hashed the way a browser hashes: the HTML parser rewrites every newline to
+  // LF before the CSP check sees the text, so hashing the bytes on disk would
+  // pass here and still be refused by Chrome on a CRLF checkout. Normalising
+  // means these fail if the build ever stops normalising.
+  const digestOf = (text) => createHash('sha256').update(normalizeNewlines(text), 'utf8').digest('base64');
+
+  it('hashes the stylesheet that is actually in the file, so the two cannot drift', () => {
+    const styles = html.match(/<style>([\s\S]*?)<\/style>/);
+    expect(styles, 'no inline stylesheet').toBeTruthy();
+    expect(policy(), 'the CSP hash does not match the inline stylesheet').toContain(
+      `style-src 'sha256-${digestOf(styles[1])}'`
+    );
   });
 
   it('hashes the script that is actually in the file, so the two cannot drift', () => {
     const script = html.match(/<script type="module">([\s\S]*?)<\/script>/);
     expect(script, 'no inline module script').toBeTruthy();
-    const digest = createHash('sha256').update(script[1], 'utf8').digest('base64');
     expect(policy(), 'the CSP hash does not match the inline script').toContain(
-      `script-src 'sha256-${digest}'`
+      `script-src 'sha256-${digestOf(script[1])}'`
     );
+  });
+
+  // A hash is only stable if the bytes are. Mixed line endings in the source
+  // tree, which is what a Windows checkout produces, would otherwise make the
+  // built file differ per platform and the digests differ with it.
+  it('emits one line ending, whatever the checkout used', () => {
+    expect(html).not.toMatch(/\r/);
   });
 
   it('declares the policy before the script it governs', () => {

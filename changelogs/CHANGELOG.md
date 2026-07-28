@@ -2,6 +2,19 @@
 
 Newest entries at the top. Times are EDT.
 
+## No `'unsafe-inline'` left in the CSP
+
+**2026-07-27 11:36 PM EDT**
+
+- **Removed the last `'unsafe-inline'`.** The stylesheet is now pinned by sha256 exactly as the script already was, so the policy reads `default-src 'none'; script-src 'sha256-…'; style-src 'sha256-…'; base-uri 'none'; form-action 'none'`. There is no `'unsafe-eval'` or `'unsafe-hashes'` either, and a test now asserts the whole family is absent rather than checking for one token, so a future edit cannot quietly reopen a different one.
+- **The justification in the entry below was wrong, and this corrects it.** It claimed `style-src` had to stay open because "the app sets `element.style` directly and hashes do not cover style attributes". The second half is true and irrelevant: CSP governs style *attributes*, meaning `style="…"` in markup and `setAttribute('style', …)`. It does **not** govern CSSOM property setters. All 43 style writes in the app are CSSOM — `.style.left =`, `.style.setProperty(…)` — with zero `setAttribute('style')`, zero `cssText`, and zero runtime `<style>` creation. The directive only ever had to permit the one `<style>` block the build emits. That entry stays as written; it is history.
+- **Found a real bug while verifying, which is the reason this took two attempts.** The first hash-pinned build was refused by Chrome: the page rendered completely unstyled, because the `<style>` block on disk carried 1133 CR characters while the `<script>` block had none. `core.autocrlf` is on, so files straight from the checkout are CRLF while files edited since are LF, and the source tree had drifted into a mix. The HTML parser rewrites every CRLF and lone CR to LF *before* anything downstream sees the text, so hashing the bytes on disk is not hashing what the browser hashes.
+- **The build now normalises every newline to LF** before hashing or writing. This is not only a CSP fix: without it `dist/index.html` differs byte for byte depending on the platform it was built on, which a committed artifact cannot afford. Vercel builds on Linux and would have produced a different file from any Windows checkout. A test asserts the built file contains no CR at all.
+- The two hash tests now normalise before digesting, mirroring the parser, so they fail if the build ever stops normalising. Without that they would have passed against a file that Chrome refuses — which is exactly what happened on the first attempt, and exactly the failure mode a green test suite is supposed to prevent.
+- Fixed the existing `inlines every src/styles/*.css file` test, which compared raw CRLF source against normalised output.
+- Verified in a real browser rather than inferred, because an absence of violation reports proves nothing on its own: silently dead styling is also quiet. Served `dist/` over HTTP with the exact `vercel.json` headers, played all eight loops, the gate and the reset, and read values back at each kind of style write. Stylesheet applied (`body` resolves the full three-layer gradient rather than `none`); trail sparkle positioned at `321px` from a property setter; rotate challenge moved `0deg` to `137deg` through `setProperty`; gate ray angle and confetti offset both resolved. **Zero CSP violations, zero console errors.** Level 8 renders fully styled with all 21 chaos flags live.
+- 281 tests green. SPEC §9 updated with the corrected reasoning and the newline rule.
+
 ## Security audit, Vercel hosting, and waste-only performance
 
 **2026-07-27 11:17 PM EDT**

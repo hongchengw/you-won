@@ -172,34 +172,48 @@ export const escapeInline = (code) => code.replace(/<\/(script|style)/gi, '<\\/$
 // in the source paste the marker back into the bundle.
 export const inject = (html, marker, content) => html.replace(marker, () => content);
 
+// The HTML parser rewrites every CRLF and every lone CR to a single LF before
+// anything downstream sees the text, so a hash of what is on disk is not a hash
+// of what the browser hashes. Windows checkouts with core.autocrlf produce CRLF
+// sources, which is how one block ends up with different line endings from the
+// other. Normalising here makes the built file byte-identical on every platform
+// and makes the digests below correct on all of them.
+export const normalizeNewlines = (text) => text.replace(/\r\n?/g, '\n');
+
 const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('base64');
 
 // SPEC.md section 9: the app makes no requests of any kind. `default-src 'none'`
 // is that promise stated to the browser rather than only to the test suite.
-// The script is pinned by hash, which the build can do because it just produced
-// it. style-src has to stay open: the app sets element.style throughout and a
-// hash does not cover inline style attributes.
-const policyFor = (script) =>
+//
+// Both inline blocks are pinned by hash, which the build can do because it just
+// produced them, so the policy needs no escape hatch. A hash does not cover a
+// style *attribute*, but the app has none: every style it writes goes through
+// `element.style.setProperty` or a property setter, and the CSSOM is not
+// governed by style-src at all. A future style attribute would be blocked,
+// which is the right way for that to fail.
+const policyFor = (script, styles) =>
   [
     "default-src 'none'",
     `script-src 'sha256-${sha256(script)}'`,
-    "style-src 'unsafe-inline'",
+    `style-src 'sha256-${sha256(styles)}'`,
     "base-uri 'none'",
     "form-action 'none'"
   ].join('; ');
 
 function build() {
-  const styles = `\n${escapeInline(collectStyles())}\n`;
-  // Hashed verbatim, so this exact string is what lands between the tags.
-  const script = `\n${escapeInline(bundleScripts())}\n`;
+  // Normalised then hashed verbatim, so the string that is hashed, the string
+  // that is written, and the string the parser hands to the CSP check are all
+  // the same string.
+  const styles = normalizeNewlines(`\n${escapeInline(collectStyles())}\n`);
+  const script = normalizeNewlines(`\n${escapeInline(bundleScripts())}\n`);
 
-  let html = read(join(SRC, 'index.html')).replace(DEV_TAGS_RE, '');
+  let html = normalizeNewlines(read(join(SRC, 'index.html'))).replace(DEV_TAGS_RE, '');
   html = inject(html, '<!-- STYLES -->', `<style>${styles}</style>`);
   html = inject(html, '<!-- SCRIPTS -->', `<script type="module">${script}</script>`);
   html = inject(
     html,
     '<!-- CSP -->',
-    `<meta http-equiv="Content-Security-Policy" content="${policyFor(script)}" />`
+    `<meta http-equiv="Content-Security-Policy" content="${policyFor(script, styles)}" />`
   );
 
   mkdirSync(join(root, 'dist'), { recursive: true });
