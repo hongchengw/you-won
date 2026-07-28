@@ -23,11 +23,16 @@ export const GATE_BEATS = [
 ];
 
 // Milliseconds from mount. The bloom runs from 0 in CSS; everything else is
-// scheduled off this table so the scene and its tests read the same clock.
+// scheduled off this table so the scene and its tests read the same clock. This
+// table is the only clock: the pad is told its length from these numbers rather
+// than carrying a copy, and gate.css is timed against the same window.
+//
+// The last beat gets six seconds alone before the cut. That hold is the payoff,
+// so nothing may fill it and nothing may end early inside it.
 export const GATE_TIMING = {
   pad: 1500,
   beats: [2500, 3800, 5000],
-  cut: 6000
+  cut: 11000
 };
 
 const RAY_COUNT = 14;
@@ -124,7 +129,9 @@ export function renderGate(root, state, deps) {
 
   at(GATE_TIMING.pad, () => {
     screen.classList.add('gate-open');
-    deps.audio.holyPad();
+    // The scene tells the audio how long it needs, so the chord is still at
+    // full strength when the cut takes it away.
+    deps.audio.holyPad((GATE_TIMING.cut - GATE_TIMING.pad) / 1000);
   });
 
   GATE_TIMING.beats.forEach((delay, index) => {

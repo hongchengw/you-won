@@ -3,6 +3,7 @@ import { createAudio, tempoFor, detuneFor } from '../src/scripts/audio.js';
 import { createRouter } from '../src/scripts/main.js';
 import { createStore } from '../src/scripts/store.js';
 import { createState, MAX_LEVEL } from '../src/scripts/state.js';
+import { GATE_TIMING } from '../src/scripts/screens/gate.js';
 
 // --- Fake Web Audio -------------------------------------------------------
 // Records everything the engine does so the tests can assert on node config
@@ -68,8 +69,9 @@ function fakeContext(log) {
         start: () => {
           node.started = true;
         },
-        stop: () => {
+        stop: (when) => {
           node.stopped = true;
+          node.stopAt = when;
         },
         addEventListener: () => {}
       };
@@ -288,6 +290,97 @@ describe('createAudio', () => {
     expect(audio.isStarted()).toBe(true);
     expect(log.contexts[0].closed).toBe(false);
     expect(log.contexts[0].state).toBe('running');
+  });
+});
+
+// The gate holds one chord under a scene that outlasts any note in the app, so
+// the pad is the one voice that needs a sustain stage. These pin the envelope
+// shape and tie its length to the scene clock, since a silent final second over
+// the last line would undo the whole point of holding it.
+describe('the holy pad envelope', () => {
+  const PAD_PEAK = 0.6 / 4; // PAD_GAIN split across the four chord voices.
+  const ATTACK = 1.6;
+  const RELEASE = 1.2;
+
+  // Every gain envelope the pad schedules, one array of events per voice.
+  function padVoices(...args) {
+    const { audio, log } = setup();
+    audio.start();
+    audio.stopMusic();
+
+    const firstGain = log.gains.length;
+    const firstEvent = log.params.length;
+    const firstOsc = log.oscillators.length;
+    audio.holyPad(...args);
+
+    const events = log.params.slice(firstEvent);
+    return {
+      oscillators: log.oscillators.slice(firstOsc),
+      envelopes: log.gains
+        .slice(firstGain)
+        .map((_, index) =>
+          events
+            .filter((entry) => entry.node === `gain${firstGain + index}`)
+            .map(({ kind, target, when }) => ({ kind, target, when }))
+        )
+    };
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('sustains at full level instead of decaying away', () => {
+    const hold = 9.5;
+    const { envelopes } = padVoices(hold);
+
+    expect(envelopes.length).toBe(4);
+    envelopes.forEach((events, voice) => {
+      expect(events, `voice ${voice}`).toEqual([
+        { kind: 'setValueAtTime', target: 0, when: 0 },
+        { kind: 'linearRampToValueAtTime', target: PAD_PEAK, when: ATTACK },
+        { kind: 'setValueAtTime', target: PAD_PEAK, when: hold },
+        { kind: 'linearRampToValueAtTime', target: 0, when: hold + RELEASE }
+      ]);
+    });
+  });
+
+  it('still has level at the moment the gate cuts', () => {
+    const scene = (GATE_TIMING.cut - GATE_TIMING.pad) / 1000;
+    const { envelopes } = padVoices(scene);
+
+    envelopes.forEach((events, voice) => {
+      const release = events.find((entry) => entry.target === 0 && entry.when > 0);
+      expect(release, `voice ${voice} never releases`).toBeTruthy();
+      expect(release.when, `voice ${voice}`).toBeGreaterThanOrEqual(scene);
+    });
+  });
+
+  it('lets every oscillator outlive its own envelope', () => {
+    const hold = 9.5;
+    const { oscillators, envelopes } = padVoices(hold);
+
+    expect(oscillators.length).toBe(envelopes.length);
+    oscillators.forEach((osc, voice) => {
+      expect(osc.stopAt, `voice ${voice}`).toBeGreaterThanOrEqual(hold + RELEASE);
+    });
+  });
+
+  it('covers the current scene window when called bare', () => {
+    const scene = (GATE_TIMING.cut - GATE_TIMING.pad) / 1000;
+    const { envelopes } = padVoices();
+
+    envelopes.forEach((events, voice) => {
+      const sustain = events.find(
+        (entry) => entry.kind === 'setValueAtTime' && entry.target === PAD_PEAK
+      );
+      expect(sustain, `voice ${voice} has no sustain stage`).toBeTruthy();
+      expect(sustain.when, `voice ${voice}`).toBeGreaterThanOrEqual(scene);
+    });
   });
 });
 

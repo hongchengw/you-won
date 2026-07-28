@@ -25,6 +25,13 @@ const DETUNE_SHAPE = [0, 1, -0.6, 0.8, -1, 0.4, -0.8, 1, -0.5, 0.9, -1, 0.6, 0, 
 
 const HOLY_CHORD = [261.63, 329.63, 392.0, 523.25];
 
+// The gate pad, in seconds. The hold is how long the chord sits at full level,
+// and the default matches the current scene window; gate.js passes its own so
+// the two clocks can never drift.
+const PAD_ATTACK = 1.6;
+const PAD_HOLD = 9.5;
+const PAD_RELEASE = 1.2;
+
 const clampAudioLevel = (level) =>
   Math.min(Math.max(Math.trunc(level) || 1, 1), MAX_AUDIO_LEVEL);
 
@@ -73,6 +80,17 @@ export function createAudio({ AudioContextCtor = globalThis.AudioContext } = {})
     param.setValueAtTime(0, at);
     param.linearRampToValueAtTime(peak, at + attack);
     param.linearRampToValueAtTime(0, at + duration);
+  };
+
+  // Attack, hold at peak, then release. shape() has no sustain stage on purpose,
+  // which is right for a note and wrong for the gate pad: the scene decides how
+  // long the chord lasts, so `hold` is seconds from now and comes from the caller.
+  const swell = (param, peak, attack, hold, release) => {
+    const at = now();
+    param.setValueAtTime(0, at);
+    param.linearRampToValueAtTime(peak, at + attack);
+    param.setValueAtTime(peak, at + hold);
+    param.linearRampToValueAtTime(0, at + hold + release);
   };
 
   const playNote = () => {
@@ -151,16 +169,21 @@ export function createAudio({ AudioContextCtor = globalThis.AudioContext } = {})
     osc.stop(now() + 0.28);
   };
 
-  // The gate scene: chaos music out, then a slow major chord swell in.
-  const holyPad = () => {
+  // The gate scene: chaos music out, then a slow major chord swell in, held at
+  // full level for `seconds` so the scene never runs on into dead air. The tail
+  // deliberately rings a little past the cut. Clamped so the hold can never land
+  // inside the attack and put the envelope events out of order.
+  const holyPad = (seconds = PAD_HOLD) => {
     if (!isStarted()) return;
     stopMusic();
 
+    const hold = Math.max(seconds, PAD_ATTACK + 0.1);
+
     HOLY_CHORD.forEach((frequency, index) => {
       const { osc, gate } = voice(index % 2 ? 'triangle' : 'sine', frequency, 0, master);
-      shape(gate.gain, PAD_GAIN / HOLY_CHORD.length, 1.6, 6.5);
+      swell(gate.gain, PAD_GAIN / HOLY_CHORD.length, PAD_ATTACK, hold, PAD_RELEASE);
       osc.start(now());
-      osc.stop(now() + 6.5);
+      osc.stop(now() + hold + PAD_RELEASE);
     });
   };
 

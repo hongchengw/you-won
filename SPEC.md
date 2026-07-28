@@ -130,7 +130,7 @@ The shell around all 8 challenge modules. Renders a fake verification card: titl
 
 ### 5.3 Gate (`screens/gate.js` + `gate.css`)
 
-Reached only from `skip()` at level 8. Roughly 6 seconds, then a hard cut.
+Reached only from `skip()` at level 8. Roughly 11 seconds, then a hard cut. The last line holds alone for about six of them, which is the payoff and the reason the scene exists. Nothing may finish inside that hold: the doors are still parting and the pad is still at full level when the cut lands, and the pad's length is derived from the scene clock rather than duplicated.
 
 1. Chaos audio cuts. Effects freeze. A white overlay blooms from center over ~1.5s to pure white.
 2. A swelling major-chord pad fades in. Ornate CSS double doors materialize and part, with light rays and drifting particles.
@@ -182,7 +182,7 @@ Two optional fields let a module tell the shell about itself:
 - **Lazy.** No `AudioContext` is constructed until the first CLAIM PRIZE click. `isStarted()` is false before that. This satisfies browser autoplay policy and is unit-tested with an injected constructor.
 - **Background:** a short looping square/triangle "MIDI" melody. Tempo and detune scale with chaos level — sweet and in tune at level 1, fast and sour at level 8.
 - **SFX:** click blip on button presses, harsh buzz on every rejection.
-- **Gate:** chaos music stops; a swelling sine/triangle major-chord pad plays with a slow attack.
+- **Gate:** chaos music stops; a swelling sine/triangle major-chord pad plays with a slow attack. It sustains at full level for a length the gate passes in, so the scene never runs on into silence, and releases just past the cut.
 - **Mute genuinely works at every level.** This is not part of the prank. People run this at a desk.
 
 API: `createAudio({ AudioContextCtor })` → `{ start, setLevel, setMuted, isStarted, isMuted, blip, buzz, holyPad, stopMusic }`.

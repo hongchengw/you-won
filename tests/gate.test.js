@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderGate, GATE_BEATS, GATE_TIMING } from '../src/scripts/screens/gate.js';
 import { createRouter } from '../src/scripts/main.js';
 import { createStore } from '../src/scripts/store.js';
 import { createState, skip, MAX_LEVEL } from '../src/scripts/state.js';
+import { repoPath } from './helpers/paths.js';
 
 // SPEC.md section 5.3, verbatim. The scene must not improvise this copy.
 const SPEC_BEATS = [
@@ -15,8 +17,10 @@ const SPEC_BEATS = [
 // "chaos music out, then the pad swells in" is the whole gag of the transition.
 function stubAudio() {
   const order = [];
+  const padSeconds = [];
   return {
     order,
+    padSeconds,
     start() {},
     setLevel() {},
     setMuted() {},
@@ -27,8 +31,9 @@ function stubAudio() {
     stopMusic() {
       order.push('stopMusic');
     },
-    holyPad() {
+    holyPad(seconds) {
       order.push('holyPad');
+      padSeconds.push(seconds);
     }
   };
 }
@@ -151,6 +156,34 @@ describe('the gate scene', () => {
     expect(document.querySelector('.mascot')).toBeNull();
   });
 
+  it('holds the whole scene up to the last millisecond before the cut', () => {
+    const { root, store } = mountScene();
+
+    vi.advanceTimersByTime(GATE_TIMING.cut - 1);
+
+    expect(root.querySelector('.screen-gate')).toBeTruthy();
+    expect(store.getState().screen).toBe('gate');
+    expect(document.body.classList.contains('gate-scene')).toBe(true);
+    expect(beatsOn(root)).toEqual(SPEC_BEATS);
+
+    vi.advanceTimersByTime(1);
+
+    expect(root.querySelector('.screen-gate')).toBeNull();
+    expect(store.getState().screen).toBe('won');
+  });
+
+  it('gives the last line about six seconds to land', () => {
+    expect(GATE_TIMING.cut - GATE_TIMING.beats.at(-1)).toBeGreaterThanOrEqual(6000);
+  });
+
+  it('asks the audio for a chord that lasts until the cut', () => {
+    const { audio } = mountScene();
+
+    vi.advanceTimersByTime(GATE_TIMING.pad);
+
+    expect(audio.padSeconds).toEqual([(GATE_TIMING.cut - GATE_TIMING.pad) / 1000]);
+  });
+
   it('cancels its pending timers when something navigates away mid-scene', () => {
     const { store, audio } = mountScene();
 
@@ -164,5 +197,45 @@ describe('the gate scene', () => {
     // The pad, the beats and the cut were all still pending. None of them fired.
     expect(audio.order).toEqual(['stopMusic']);
     expect(document.body.classList.contains('gate-scene')).toBe(false);
+  });
+});
+
+// The scene is a timeline split across two files: gate.js decides when, gate.css
+// decides what. Only the stylesheet source can say whether the doors are still
+// travelling at the cut, so these read it the way chaos.test.js and
+// mascot.test.js read theirs.
+describe('gate.css', () => {
+  const css = readFileSync(repoPath('src', 'styles', 'gate.css'), 'utf8');
+
+  // From `.gate-open` landing to the cut. Everything below is measured against it.
+  const SCENE_SECONDS = (GATE_TIMING.cut - GATE_TIMING.pad) / 1000;
+
+  // Sum every duration in a declaration, so delay and duration both count and
+  // a reordered animation shorthand cannot quietly pass.
+  const seconds = (text) =>
+    [...text.matchAll(/([\d.]+)s\b/g)].reduce((total, [, value]) => total + Number(value), 0);
+
+  const declaration = (selector, source) => {
+    const at = source.indexOf(`${selector} {`);
+    expect(at, `no rule for ${selector}`).toBeGreaterThan(-1);
+    return source.slice(at, source.indexOf('}', at));
+  };
+
+  const reduced = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
+
+  it('keeps the doors still parting at the moment of the cut', () => {
+    ['left', 'right'].forEach((side) => {
+      const rule = declaration(`.gate-open .gate-door-${side}`, css);
+      const part = rule.split(',').find((piece) => piece.includes(`gate-part-${side}`));
+      expect(part, `no gate-part-${side} animation`).toBeTruthy();
+      expect(seconds(part), `gate-part-${side}`).toBeGreaterThan(SCENE_SECONDS);
+    });
+  });
+
+  it('keeps the glow moving through the whole scene in reduced motion', () => {
+    // Nothing may move a pixel here, but a dead frame for most of the scene
+    // reads as a crash. Opacity is not what the media query protects against.
+    const rule = declaration('.gate-open .gate-light', reduced);
+    expect(seconds(rule)).toBeGreaterThanOrEqual(SCENE_SECONDS);
   });
 });
