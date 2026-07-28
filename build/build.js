@@ -3,6 +3,7 @@
 // SPEC.md section 9.
 
 import { readFileSync, writeFileSync, mkdirSync, globSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve, relative } from 'node:path';
 
@@ -159,16 +160,56 @@ function assertUniqueTopLevel(modules) {
 
 const DEV_TAGS_RE = /^[ \t]*(<link\b[^>]*>|<script\b[^>]*\bsrc=[^>]*>\s*<\/script>)\n?/gim;
 
+// Everything ends up pasted into an HTML context, where tokenisation stops at
+// the first `</script` or `</style` regardless of what the JS or CSS thinks it
+// is quoting. Both sequences are only ever legal inside a string, a regex or a
+// comment, where the backslash is either an escape for `/` or simply inert, so
+// defusing them is always safe.
+export const escapeInline = (code) => code.replace(/<\/(script|style)/gi, '<\\/$1');
+
+// Replacement, not pattern substitution: `$&` and its friends in the payload
+// are literal text. Passing the payload as a string would let a `$&` anywhere
+// in the source paste the marker back into the bundle.
+export const inject = (html, marker, content) => html.replace(marker, () => content);
+
+const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('base64');
+
+// SPEC.md section 9: the app makes no requests of any kind. `default-src 'none'`
+// is that promise stated to the browser rather than only to the test suite.
+// The script is pinned by hash, which the build can do because it just produced
+// it. style-src has to stay open: the app sets element.style throughout and a
+// hash does not cover inline style attributes.
+const policyFor = (script) =>
+  [
+    "default-src 'none'",
+    `script-src 'sha256-${sha256(script)}'`,
+    "style-src 'unsafe-inline'",
+    "base-uri 'none'",
+    "form-action 'none'"
+  ].join('; ');
+
 function build() {
-  const html = read(join(SRC, 'index.html'))
-    .replace(DEV_TAGS_RE, '')
-    .replace('<!-- STYLES -->', `<style>\n${collectStyles()}\n</style>`)
-    .replace('<!-- SCRIPTS -->', `<script type="module">\n${bundleScripts()}\n</script>`);
+  const styles = `\n${escapeInline(collectStyles())}\n`;
+  // Hashed verbatim, so this exact string is what lands between the tags.
+  const script = `\n${escapeInline(bundleScripts())}\n`;
+
+  let html = read(join(SRC, 'index.html')).replace(DEV_TAGS_RE, '');
+  html = inject(html, '<!-- STYLES -->', `<style>${styles}</style>`);
+  html = inject(html, '<!-- SCRIPTS -->', `<script type="module">${script}</script>`);
+  html = inject(
+    html,
+    '<!-- CSP -->',
+    `<meta http-equiv="Content-Security-Policy" content="${policyFor(script)}" />`
+  );
 
   mkdirSync(join(root, 'dist'), { recursive: true });
   writeFileSync(join(root, 'dist', 'index.html'), html, 'utf8');
   return html;
 }
 
-const output = build();
-console.log(`dist/index.html written (${output.length} bytes)`);
+// Importing this file, which the tests do to reach the helpers above, must not
+// write anything. Only running it as a command builds.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const output = build();
+  console.log(`dist/index.html written (${Buffer.byteLength(output, 'utf8')} bytes)`);
+}

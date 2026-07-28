@@ -66,6 +66,14 @@ function syncEffect(name, active, startEffect) {
 const TRAIL_SPARKLES = ['✨', '💖', '⭐', '🌈', '🍬'];
 const TRAIL_LIFETIME = 750;
 
+// One sparkle per accepted sample, and never more than TRAIL_MAX alive at once.
+// The cap is what the lifetime already produces at a normal pointer speed, so
+// the trail looks the same; it only stops a fast flick from carpeting the page
+// with animated nodes on top of the level 8 filter stack.
+const TRAIL_INTERVAL = 45;
+const TRAIL_INTERVAL_HEAVY = 30;
+const TRAIL_MAX = 24;
+
 // One sparkle per pointer sample, throttled so a fast flick does not carpet the
 // page. At level 8 `fx-trails` thickens it via CSS, read live off the body.
 function startTrail(doc) {
@@ -74,15 +82,26 @@ function startTrail(doc) {
   layer.setAttribute('aria-hidden', 'true');
   doc.body.append(layer);
 
-  const timers = new Set();
+  // Insertion-ordered, so the first entry is always the oldest sparkle.
+  const live = new Map();
   let last = 0;
   let index = 0;
 
+  const retire = (dot) => {
+    clearTimeout(live.get(dot));
+    live.delete(dot);
+    dot.remove();
+  };
+
   const onMove = (event) => {
-    const heavy = doc.body.classList.contains('fx-trails');
     const now = Date.now();
-    if (now - last < (heavy ? 16 : 45)) return;
+    // Gate on the cheaper interval first: the class read used to run on every
+    // raw pointer sample, and now runs at most once per accepted one.
+    if (now - last < TRAIL_INTERVAL_HEAVY) return;
+    if (now - last < TRAIL_INTERVAL && !doc.body.classList.contains('fx-trails')) return;
     last = now;
+
+    if (live.size >= TRAIL_MAX) retire(live.keys().next().value);
 
     const dot = doc.createElement('span');
     dot.className = 'fx-trail-dot';
@@ -93,19 +112,15 @@ function startTrail(doc) {
     index += 1;
     layer.append(dot);
 
-    const timer = setTimeout(() => {
-      dot.remove();
-      timers.delete(timer);
-    }, TRAIL_LIFETIME);
-    timers.add(timer);
+    live.set(dot, setTimeout(() => retire(dot), TRAIL_LIFETIME));
   };
 
   doc.addEventListener('pointermove', onMove);
 
   return () => {
     doc.removeEventListener('pointermove', onMove);
-    timers.forEach(clearTimeout);
-    timers.clear();
+    live.forEach(clearTimeout);
+    live.clear();
     layer.remove();
   };
 }
@@ -220,6 +235,12 @@ const DODGE_TARGETS = 'button, a[href], [data-action], input, select';
 // A control jumps aside the first time the pointer reaches it, then gives up.
 // The offset is small and stays on screen, so the second approach always wins.
 function startDodge(doc) {
+  // Counts the dodges this flag has handed out. It used to be derived by
+  // querying the whole document on every pointerover, in a capture-phase
+  // listener, purely to pick an offset. The listener is on the hot path for
+  // every pointer movement over a control, so it does no DOM work now.
+  let dodges = 0;
+
   const onOver = (event) => {
     const target = event.target;
     if (!target || typeof target.closest !== 'function') return;
@@ -227,7 +248,8 @@ function startDodge(doc) {
     const control = target.closest(DODGE_TARGETS);
     if (!control || control.dataset.fxDodged) return;
 
-    const seed = doc.querySelectorAll('[data-fx-dodged]').length;
+    const seed = dodges;
+    dodges += 1;
     control.dataset.fxDodged = 'true';
     control.style.setProperty('--fx-dodge-x', `${(seed % 2 ? -1 : 1) * 42}px`);
     control.style.setProperty('--fx-dodge-y', `${(seed % 3) * 14 - 14}px`);

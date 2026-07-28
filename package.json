@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "A prank web app that traps you in an unwinnable CAPTCHA gauntlet.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node build/build.js",
     "test": "vitest run",
@@ -11,6 +14,6 @@
   },
   "devDependencies": {
     "jsdom": "^25.0.1",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.7"
   }
 }

@@ -1,8 +1,10 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { globSync } from 'node:fs';
 import { repoPath } from './helpers/paths.js';
+import { escapeInline, inject } from '../build/build.js';
 import { CAPTCHA_MODULES } from '../src/scripts/captchas/index.js';
 import { CAPTCHA_ORDER } from '../src/scripts/state.js';
 
@@ -87,5 +89,74 @@ describe('build output', () => {
         expect(html, `missing line from ${file}: ${line}`).toContain(line);
       }
     }
+  });
+});
+
+// Everything ships inside one <script> and one <style>, so the source is being
+// pasted into an HTML context. Two ways that goes wrong, neither of which any
+// source file triggers today, which is exactly why they need a guard.
+describe('inline block escaping', () => {
+  it('defuses a closing tag that appears inside the source', () => {
+    // HTML tokenisation ends the block at the first `</script`, wherever it is:
+    // inside a string, inside a comment, it does not matter.
+    expect(escapeInline('const s = "</script>";')).toBe('const s = "<\\/script>";');
+    expect(escapeInline('/* see </style> */')).toBe('/* see <\\/style> */');
+    expect(escapeInline('</SCRIPT bar')).toBe('<\\/SCRIPT bar');
+    expect(escapeInline('a</script>b</script>c')).toBe('a<\\/script>b<\\/script>c');
+  });
+
+  it('leaves every other angle bracket alone', () => {
+    expect(escapeInline('a < b && c > d')).toBe('a < b && c > d');
+    expect(escapeInline('</div></span>')).toBe('</div></span>');
+    expect(escapeInline('scriptish </scripts')).toBe('scriptish <\\/scripts');
+  });
+
+  it('treats the payload as text, not as a replacement pattern', () => {
+    // String.prototype.replace reads `$&` and friends in the replacement as
+    // substitution syntax, so a `$&` in any source file would paste the marker
+    // back into the bundle.
+    expect(inject('a<!-- X -->b', '<!-- X -->', 'p$&q')).toBe('ap$&qb');
+    expect(inject('a<!-- X -->b', '<!-- X -->', "$`$'$1")).toBe("a$`$'$1b");
+  });
+
+  it('closes each inline block exactly once in the built file', () => {
+    expect(html.match(/<\/script>/gi)).toHaveLength(1);
+    expect(html.match(/<\/style>/gi)).toHaveLength(1);
+  });
+});
+
+// The app makes no requests of any kind. The tests above assert that about the
+// source; this makes the browser enforce it about the page.
+describe('content security policy', () => {
+  const policy = () =>
+    html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)"/i)?.[1];
+
+  it('locks the page down to nothing by default', () => {
+    expect(policy(), 'no CSP meta tag in the built file').toBeTruthy();
+    expect(policy()).toContain("default-src 'none'");
+    expect(policy()).toContain("base-uri 'none'");
+    expect(policy()).toContain("form-action 'none'");
+  });
+
+  // The app sets element.style throughout and hashes do not cover style
+  // attributes, so this one genuinely has to stay open.
+  it('allows the inline stylesheet', () => {
+    expect(policy()).toContain("style-src 'unsafe-inline'");
+  });
+
+  it('hashes the script that is actually in the file, so the two cannot drift', () => {
+    const script = html.match(/<script type="module">([\s\S]*?)<\/script>/);
+    expect(script, 'no inline module script').toBeTruthy();
+    const digest = createHash('sha256').update(script[1], 'utf8').digest('base64');
+    expect(policy(), 'the CSP hash does not match the inline script').toContain(
+      `script-src 'sha256-${digest}'`
+    );
+  });
+
+  it('declares the policy before the script it governs', () => {
+    expect(html.indexOf('Content-Security-Policy')).toBeGreaterThan(-1);
+    expect(html.indexOf('Content-Security-Policy')).toBeLessThan(
+      html.indexOf('<script type="module">')
+    );
   });
 });
