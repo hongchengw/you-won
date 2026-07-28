@@ -1,0 +1,15 @@
+# Vercel runs `npm run build`, which reads only src/, build/ and package.json.
+# Everything below is repo furniture that would be uploaded on every deploy and
+# then ignored. Nothing here is served either way: only dist/ is published.
+
+tests/
+tasks/
+changelogs/
+SPEC.md
+AGENTS.md
+
+# Local noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
