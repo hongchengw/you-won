@@ -230,26 +230,35 @@
 }
 
 /* --- Skip link ------------------------------------------------------------
-   The only way out. Small and low contrast so it reads as an admission of
-   defeat rather than a button, but it is a real button with a real hit area
-   and it is never allowed to become unreachable. */
+   The only way out, and players have to be able to find it. Dark ink on a
+   white chip: roughly 13:1 against the light card at levels 1 to 3, and still
+   high contrast once the card goes dark, so one treatment survives strobe,
+   invert and spin without a level-keyed bump. Smaller than VERIFY so it does
+   not compete for the primary action, but bold and legible at a glance. */
 
 .captcha-skip {
   justify-self: end;
   margin: 8px 12px 0;
-  /* Padding is the hit area. Keep it generous even though the text is tiny. */
-  padding: 8px 10px;
-  font-size: 0.68rem;
-  color: #8d99a5;
+  /* Padding is the hit area. Keep it generous even though the text is small. */
+  padding: 9px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #26313d;
   text-decoration: underline;
-  background: none;
+  /* The underline still has to read inside the chip. */
+  text-underline-offset: 3px;
+  background: #fff;
   border: none;
-  border-radius: 3px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px #26313d;
   animation: captcha-skip-in 0.9s ease-out both;
 }
 
+/* Hold the ink and tint the chip: darkening the text here would lower contrast
+   against the base, not raise it. */
 .captcha-skip:hover {
-  color: #46535f;
+  color: #26313d;
+  background: #eef3f8;
 }
 
 .captcha-skip[hidden] {
@@ -261,7 +270,7 @@
     opacity: 0;
   }
   100% {
-    opacity: 0.85;
+    opacity: 1;
   }
 }
 
@@ -1059,16 +1068,6 @@ body.fx-dodge .captcha-skip {
   }
 }
 
-/* Once the card goes dark the link stops hiding. It is the only exit and it has
-   to survive strobe, invert and spin, so from here contrast goes up, not down.
-   Keyed off fx-neon rather than fx-overdrive because fx-neon is not a motion
-   flag: this has to hold in reduced motion too. */
-body.fx-neon .captcha-skip {
-  color: #26313d;
-  background: #fff;
-  box-shadow: 0 0 0 1px #26313d;
-}
-
 @media (max-width: 420px) {
   .captcha-heading {
     display: none;
@@ -1130,6 +1129,6 @@ body.fx-neon .captcha-skip {
 
   .captcha-skip {
     animation: none;
-    opacity: 0.85;
+    opacity: 1;
   }
 }

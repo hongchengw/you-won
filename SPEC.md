@@ -126,7 +126,7 @@ The shell around all 8 challenge modules. Renders a fake verification card: titl
 
 **Invariant.** The table has exactly `SKIP_THRESHOLD` entries. Its last line therefore lands on the rejection that earns the skip link, and the `Incorrect. (attempt N)` fallback begins one past it. Moving the threshold moves the table with it.
 
-**Skip link.** Hidden while `fails < SKIP_THRESHOLD`. At `fails >= SKIP_THRESHOLD` a small, low-contrast `skip verification →` link fades in. Clicking it shows `VERIFICATION FAILED — returning to prize claim`, then dispatches `skip()`. At high chaos it drifts around, subject to the hard rule in §4.
+**Skip link.** Hidden while `fails < SKIP_THRESHOLD`. At `fails >= SKIP_THRESHOLD` a small but bold, high-contrast `skip verification →` chip fades in: dark ink on white, legible at a glance at every level and in both motion modes. It stays smaller than VERIFY so it never competes for the primary action. One treatment covers the whole run, so the old level-4 contrast bump is no longer needed. Clicking it shows `VERIFICATION FAILED — returning to prize claim`, then dispatches `skip()`. At high chaos it drifts around, subject to the hard rule in §4.
 
 ### 5.3 Gate (`screens/gate.js` + `gate.css`)
 

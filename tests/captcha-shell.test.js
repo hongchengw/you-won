@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   renderCaptcha,
@@ -10,6 +11,7 @@ import { CAPTCHA_MODULES } from '../src/scripts/captchas/index.js';
 import { createRouter } from '../src/scripts/main.js';
 import { createStore } from '../src/scripts/store.js';
 import { createState, CAPTCHA_ORDER, SKIP_THRESHOLD, MAX_LEVEL } from '../src/scripts/state.js';
+import { repoPath } from './helpers/paths.js';
 
 // SPEC.md section 5.2, verbatim. The shell must not improvise this copy.
 const SPEC_REJECTIONS = [
@@ -336,6 +338,52 @@ describe('cleanup registry', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('captcha.css', () => {
+  const css = readFileSync(repoPath('src', 'styles', 'captcha.css'), 'utf8');
+
+  // The declaration body of the first rule whose selector line matches exactly.
+  const ruleBody = (selector) => {
+    const at = css.indexOf(`\n${selector} {`);
+    expect(at, `no rule for ${selector}`).toBeGreaterThan(-1);
+    const open = css.indexOf('{', at);
+    return css.slice(open + 1, css.indexOf('}', open));
+  };
+
+  const baseSkip = ruleBody('.captcha-skip');
+
+  it('gives the only exit a bold, high-contrast chip', () => {
+    expect(baseSkip).toMatch(/font-weight:\s*700/);
+    expect(baseSkip).toMatch(/color:\s*#26313d/);
+    expect(baseSkip).toMatch(/background:\s*#fff/);
+  });
+
+  it('sizes the exit to be legible at a glance', () => {
+    const size = baseSkip.match(/font-size:\s*([\d.]+)rem/);
+    expect(size, 'no font-size on .captcha-skip').toBeTruthy();
+    expect(Number(size[1])).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it('never leaves the exit resting below full strength', () => {
+    // Every opacity the link can settle at, wherever it is declared. The
+    // fade-in's 0% is the fade itself, so it is the one exemption.
+    const keyframes = css.slice(css.indexOf('@keyframes captcha-skip-in'));
+    const fade = keyframes.slice(0, keyframes.indexOf('\n}'));
+    expect(fade).toMatch(/100%\s*\{\s*opacity:\s*1;/);
+
+    const resting = [...css.matchAll(/\.captcha-skip[^{]*\{([^}]*)\}/g)]
+      .flatMap(([, body]) => [...body.matchAll(/opacity:\s*([\d.]+)/g)])
+      .map(([, value]) => Number(value));
+    resting.forEach((value) => expect(value).toBe(1));
+  });
+
+  it('carries one treatment, with no level-keyed contrast override left', () => {
+    const overrides = [...css.matchAll(/(body\.fx-[\w-]+ \.captcha-skip)[^{]*\{([^}]*)\}/g)];
+    overrides.forEach(([, selector, body]) => {
+      expect(body, selector).not.toMatch(/color:|background:|box-shadow:/);
+    });
   });
 });
 

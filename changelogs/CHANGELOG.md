@@ -2,6 +2,21 @@
 
 Newest entries at the top. Times are EDT.
 
+## T13 — A skip link players can find
+
+**2026-07-27 10:10 PM EDT**
+
+- **Promoted the skip link to a bold, high-contrast chip at every level.** It was `0.68rem` `#8d99a5` at 85% opacity, deliberately a whisper so it would read as an admission of defeat, and that is exactly why players did not find it. The base `.captcha-skip` rule now carries `font-size: 0.82rem`, `font-weight: 700`, `color: #26313d`, `background: #fff` and `box-shadow: 0 0 0 1px #26313d`, with `padding: 9px 14px` and `border-radius: 6px` so it reads as a chip without shrinking the hit area. It stays smaller than VERIFY's `0.78rem` bold uppercase, so it does not compete for the primary action. The underline stays, with `text-underline-offset: 3px` so it still reads inside the chip.
+- **Deleted `body.fx-neon .captcha-skip`.** The app already knew this treatment: from level 4 that rule flipped the link to dark ink on a white chip so it could survive strobe, invert and spin. Those three values are now the base, so one prominent look covers the whole run instead of a whisper that became legible only once the card went dark. Dark ink on white clears roughly 13:1 against the light card at levels 1 to 3 and stays high contrast on the dark card later. Safe to remove: no test asserted that rule, and the "block for every flag" check in `chaos.test.js` reads `chaos.css`, where `body.fx-neon` keeps its own block.
+- **Inverted `:hover`.** It set `color: #46535f`, which against the new base would have *lowered* contrast on hover. The ink now holds at `#26313d` and the chip tints to `#eef3f8` instead.
+- **Took the link off 85% opacity in both places it rested there**, the `captcha-skip-in` keyframe's `100%` and the reduced-motion static value, so it never settles below full strength. The keyframe's `0%` is untouched: that is the fade.
+- Left the §4 hard-rule machinery alone: the `fx-dodge` drift animation, `.captcha-skip[hidden]`, the reduced-motion `animation: none`, and the padding that is the hit area.
+- Added a `describe('captcha.css')` block to `tests/captcha-shell.test.js`, following the stylesheet-source precedent in `chaos.test.js` and `mascot.test.js`: the base rule carries the weight, the ink and a background; the font size is at least `0.8rem`; every opacity the link can settle at is `1`; and no `body.fx-*` rule sets `color`, `background` or `box-shadow` on it any more, so the single treatment cannot quietly regress into two. All four failed first against the old stylesheet. 256 tests green.
+- Updated SPEC §5.2, the one place the old look was specified: a small but bold, high-contrast chip, legible at every level and in both motion modes, still smaller than VERIFY, with a note that the level-4 contrast bump is no longer needed because the base carries it.
+- Verified in the built `dist/index.html` in headless Chrome at 1440px, 768px and 390px, in both motion modes, driving the real UI level by level. The link computes to 13.12px/700, `rgb(38,49,61)` on `rgb(255,255,255)` at opacity 1 everywhere, and at every level where it is earned it is on screen with `elementFromPoint` at its centre returning the link itself. The 390px runs are done inside a 390px iframe, since Chrome will not open a window under 500px on Windows. Screenshotted at levels 1, 4 and 8: at level 8, under popups, inversion and the neon card, the chip is one of the most legible things on the page. Ran the same harness against the pre-change build to confirm the one level it cannot drive (level 7, where `fx-dodge` absorbs the synthetic clicks so the link is correctly still hidden at zero rejections) behaves identically before and after.
+- This makes the gauntlet easier to leave, which is the point, and softens the original joke slightly, which is accepted.
+- Rebuilt `dist/index.html` and committed it alongside the source.
+
 ## T12 — Skip at three rejections
 
 **2026-07-27 1:28 AM EDT**
